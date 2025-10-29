@@ -1,50 +1,50 @@
-# Welcome to your Expo app 👋
+# Expo 앱에 오신 것을 환영합니다 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+이 프로젝트는 [`create-expo-app`](https://www.npmjs.com/package/create-expo-app)으로 생성된 [Expo](https://expo.dev) 프로젝트입니다.
 
-## Get started
+## 시작하기
 
-1. Install dependencies
+1. 의존성 설치
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. 앱 실행
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+출력 결과에서 앱을 열 수 있는 옵션이 표시됩니다.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [개발 빌드](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android 에뮬레이터](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS 시뮬레이터](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go): Expo에서 제공하는 제한된 샌드박스 환경
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**app** 디렉터리 안의 파일을 수정하면서 개발을 시작할 수 있습니다. 이 프로젝트는 [파일 기반 라우팅](https://docs.expo.dev/router/introduction)을 사용합니다.
 
-## Get a fresh project
+## 새 프로젝트 시작
 
-When you're ready, run:
+준비가 되면 다음 명령어를 실행하세요:
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+이 명령어는 스타터 코드를 **app-example** 디렉터리로 이동시키고, 새롭게 빈 **app** 디렉터리를 생성하여 개발을 시작할 수 있도록 합니다.
 
-## Learn more
+## 더 알아보기
 
-To learn more about developing your project with Expo, look at the following resources:
+Expo 프로젝트 개발에 대해 더 알아보려면 아래 자료를 참고하세요:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- [Expo 문서](https://docs.expo.dev/): 기본 개념부터 고급 주제까지 [가이드](https://docs.expo.dev/guides) 확인
+- [Learn Expo 튜토리얼](https://docs.expo.dev/tutorial/introduction/): Android, iOS, 웹에서 실행 가능한 프로젝트를 단계별로 따라 만들 수 있는 튜토리얼
 
-## Join the community
+## 커뮤니티 참여
 
-Join our community of developers creating universal apps.
+전 세계 개발자들과 함께 유니버설 앱을 개발하는 커뮤니티에 참여하세요.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo GitHub](https://github.com/expo/expo): 오픈 소스 플랫폼 확인 및 기여
+- [Discord 커뮤니티](https://chat.expo.dev): Expo 사용자와 질문/답변 교류

@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ec8df746-47fb-4dd2-bc23-40c737ab5e3a"
+      }
+    },
+    "owner": "team-roadmate"
   }
 }
