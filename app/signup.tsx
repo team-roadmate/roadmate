@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { styles } from "./css/index.styles";
+import { router } from "expo-router";
 import {
   View,
   Text,
@@ -64,6 +65,7 @@ export default function SignupScreen() {
       phone,
       birth: `${birthYear}-${birthMonth}-${birthDay}`,
     });
+        router.push("/profile");
   };
 
   return (
