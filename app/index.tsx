@@ -1,6 +1,5 @@
-import { Text, View } from "react-native";
-import LoginScreen from "./login";
+import { Redirect } from "expo-router";
 
-export default LoginScreen;
-
-
+export default function Index() {
+  return <Redirect href="/record/record" />;
+}
