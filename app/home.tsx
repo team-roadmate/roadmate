@@ -1,4 +1,4 @@
-// HomeScreen.js
+import DashboardList from "@/components/Dashboard/DashboardList";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -13,8 +13,11 @@ import {
 
 export default function Home() {
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Search Bar */}
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.searchBox}>
         <Ionicons name="search" size={26} color="#001A72" />
         <TextInput
@@ -25,34 +28,10 @@ export default function Home() {
         <Feather name="menu" size={30} color="#001A72" />
       </View>
 
-      {/* Top Cards */}
-      <View style={styles.cardRow}>
-        <View style={[styles.card, { backgroundColor: "#4253E8" }]}>
-          <Ionicons name="walk" size={38} color="white" />
-          <Text style={styles.cardNumber}>6,320</Text>
-        </View>
+      <DashboardList />
 
-        <View style={[styles.card, { backgroundColor: "#C6F500" }]}>
-          <View style={styles.weatherRow}>
-            <Ionicons name="sunny" size={32} color="white" />
-            <Text style={styles.weatherLocation}>구로구</Text>
-          </View>
-          <Text style={styles.weatherTemp}>
-            14°C <Text style={styles.tempSub}>(18°C)</Text>
-          </Text>
-          <Text style={styles.weatherLabel}>
-            미세먼지 <Text style={styles.tag}>보통</Text>
-          </Text>
-          <Text style={styles.weatherLabel}>
-            불쾌지수 <Text style={styles.tag}>낮음</Text>
-          </Text>
-        </View>
-      </View>
-
-      {/* Theme Title */}
       <Text style={styles.sectionTitle}>테마별 추천 코스</Text>
 
-      {/* Tabs */}
       <View style={styles.tabRow}>
         <TouchableOpacity style={styles.tabBtn}>
           <Text style={styles.tabText}>공원</Text>
@@ -65,8 +44,11 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
-      {/* Course Cards - Horizontal */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.courseScrollContainer}
+      >
         {[1, 2, 3].map((v) => (
           <View key={v} style={styles.courseCard}>
             <Image
@@ -84,7 +66,6 @@ export default function Home() {
         ))}
       </ScrollView>
 
-      {/* Recommend Routes */}
       <View style={styles.recommendHeader}>
         <Text style={styles.sectionTitle}>추천 경로</Text>
         <TouchableOpacity>
@@ -92,7 +73,6 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
-      {/* Route List */}
       {[1, 2, 3].map((v) => (
         <View key={v} style={styles.routeItem}>
           <View>
@@ -109,6 +89,7 @@ export default function Home() {
           </TouchableOpacity>
         </View>
       ))}
+      <View style={{ height: 50 }} />
     </ScrollView>
   );
 }
@@ -116,63 +97,30 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 20,
   },
+  contentContainer: {
+    paddingBottom: 20,
+  },
 
-  /** Search Bar */
   searchBox: {
     width: "100%",
     backgroundColor: "#F2F5FF",
     borderRadius: 12,
-    height: 60,
-    paddingHorizontal: 15,
+    minHeight: 50,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+    padding: 10,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 10,
-    marginRight: 10,
+    marginHorizontal: 10,
     fontSize: 17,
     color: "#001A72",
   },
-
-  /** Cards */
-  cardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 25,
-  },
-  card: {
-    width: "48%",
-    borderRadius: 16,
-    padding: 20,
-  },
-  cardNumber: {
-    fontSize: 42,
-    marginTop: 15,
-    color: "white",
-    fontWeight: "bold",
-  },
-
-  weatherRow: { flexDirection: "row", alignItems: "center" },
-  weatherLocation: {
-    color: "white",
-    fontSize: 26,
-    marginLeft: 10,
-    fontWeight: "bold",
-  },
-  weatherTemp: {
-    marginTop: 8,
-    color: "white",
-    fontSize: 30,
-    fontWeight: "bold",
-  },
-  tempSub: { fontSize: 20 },
-  weatherLabel: { color: "white", fontSize: 16, marginTop: 5 },
   tag: {
     backgroundColor: "rgba(255,255,255,0.3)",
     paddingHorizontal: 8,
@@ -180,62 +128,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  /** Section Titles */
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    marginTop: 35,
+    marginTop: 25,
     color: "#001A72",
   },
 
-  /** Tabs */
   tabRow: {
     flexDirection: "row",
-    marginTop: 15,
+    marginTop: 10,
+    gap: 8,
   },
   tabBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 20,
+    padding: 10,
     borderWidth: 1,
     borderColor: "#001A72",
     borderRadius: 10,
-    marginRight: 10,
   },
   tabText: { color: "#001A72", fontSize: 15 },
   tabActive: { backgroundColor: "#001A72" },
   tabActiveText: { color: "white" },
 
-  /** Course Cards */
+  courseScrollContainer: {
+    paddingVertical: 10,
+    gap: 15,
+  },
   courseCard: {
-    width: 200,
+    width: 150,
     backgroundColor: "#eee",
     borderRadius: 12,
-    marginRight: 15,
-    marginTop: 15,
+    flexShrink: 0,
   },
   courseImage: {
     width: "100%",
-    height: 150,
+    height: 90,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
   courseTitle: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    fontSize: 17,
+    padding: 8,
+    fontSize: 15,
     fontWeight: "600",
     color: "#001A72",
   },
   courseMeta: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+    gap: 5,
   },
-  metaText: { marginLeft: 6, marginRight: 12, color: "#777" },
+  metaText: { color: "#777", fontSize: 10 },
 
-  /** Recommend List */
   recommendHeader: {
-    marginTop: 40,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -245,18 +191,22 @@ const styles = StyleSheet.create({
   routeItem: {
     backgroundColor: "#F0F0F0",
     borderRadius: 12,
-    padding: 20,
-    marginTop: 15,
+    padding: 15,
+    marginTop: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   routeTitle: { fontSize: 18, color: "#001A72", fontWeight: "600" },
-  routeMeta: { flexDirection: "row", alignItems: "center", marginTop: 5 },
+  routeMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+    gap: 10,
+  },
   arrowBtn: {
     backgroundColor: "#AEEA00",
-    height: 45,
-    width: 45,
+    padding: 8,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
