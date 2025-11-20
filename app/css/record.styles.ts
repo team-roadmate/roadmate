@@ -113,7 +113,7 @@ export const recordStyles = StyleSheet.create({
 
   tagText: {
     fontSize: 12,
-    color: "#14194A",
+    color: "#161E6C",
   },
 
   scoreRow: {
