@@ -1,6 +1,5 @@
-import { Text, View } from "react-native";
-import LoginScreen from "./login";
+import Home from "@/app/home";
 
-export default LoginScreen;
-
-
+export default function Index() {
+  return <Home />;
+}
