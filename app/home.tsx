@@ -6,27 +6,30 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";   // ★ 추가됨
 
 export default function Home() {
+  const router = useRouter();   // ★ 추가됨
+
   return (
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentContainer}
     >
-      <View style={styles.searchBox}>
+      {/* 🔥 검색창 클릭 → Search.tsx 이동 */}
+      <TouchableOpacity
+        style={styles.searchBox}
+        onPress={() => router.push("./record/Search")}   // ★ 이동 기능 추가
+        activeOpacity={0.8}
+      >
         <Ionicons name="search" size={26} color="#001A72" />
-        <TextInput
-          placeholder="검색어를 입력해주세요"
-          style={styles.searchInput}
-          placeholderTextColor="#001A72"
-        />
+        <Text style={styles.searchInput}>검색어를 입력해주세요</Text>
         <Feather name="menu" size={30} color="#001A72" />
-      </View>
+      </TouchableOpacity>
 
       <DashboardList />
 
@@ -120,12 +123,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     fontSize: 17,
     color: "#001A72",
-  },
-  tag: {
-    backgroundColor: "rgba(255,255,255,0.3)",
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    fontSize: 14,
+    opacity: 0.7,
   },
 
   sectionTitle: {
