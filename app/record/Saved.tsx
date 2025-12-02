@@ -1,10 +1,10 @@
-// app/record/list.tsx
+// app/record/Saved.tsx
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { recordStyles as s } from "../css/record.styles";
 
-export default function RecordScreen() {
+export default function SavedScreen() {
   const router = useRouter();
 
   return (
@@ -14,10 +14,10 @@ export default function RecordScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
-        <Text style={s.headerTitle}>최근 기록</Text>
+        <Text style={s.headerTitle}>저장한 코스</Text>
       </View>
 
-      <Text style={s.subText}>총 n개의 코스가 검색되었습니다:</Text>
+      <Text style={s.subText}>저장한 코스 목록입니다:</Text>
 
       {/* 정렬 박스 */}
       <View style={s.sortRow}>
@@ -59,13 +59,19 @@ export default function RecordScreen() {
             </Text>
           </View>
 
-          {/* 상세 보기만 크게 + 가운데 정렬 */}
-          <View style={s.centerBtnRow}>
+          <View style={s.btnRow}>
             <TouchableOpacity
-              style={s.bigDetailBtn}
+              style={s.detailBtn}
               onPress={() => router.push("/record/defail_record")}
             >
-              <Text style={s.bigDetailText}>상세 보기</Text>
+              <Text style={s.detailText}>상세 보기</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={s.reviewBtn}
+                onPress={() => router.push("/record/review")}
+            >
+              <Text style={s.reviewText}>리뷰 보기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -103,13 +109,16 @@ export default function RecordScreen() {
             </Text>
           </View>
 
-          {/* 상세 보기만 크게 + 가운데 정렬 */}
-          <View style={s.centerBtnRow}>
+          <View style={s.btnRow}>
             <TouchableOpacity
-              style={s.bigDetailBtn}
+              style={s.detailBtn}
               onPress={() => router.push("/record/defail_record")}
             >
-              <Text style={s.bigDetailText}>상세 보기</Text>
+              <Text style={s.detailText}>상세 보기</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.reviewBtn}>
+              <Text style={s.reviewText}>리뷰 보기</Text>
             </TouchableOpacity>
           </View>
         </View>
