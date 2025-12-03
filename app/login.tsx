@@ -5,17 +5,19 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";   // 🔥 router 사용
 
 export default function LoginScreen() {
+  const router = useRouter(); // 🔥 추가됨
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLoginPress = () => {
-    // TODO: 나중에 여기서 Spring Boot 로그인 API 호출
     console.log("login try", { id, password });
+
+    // 🔥 로그인 성공 시 home 으로 이동
+    router.push("/home");
   };
 
   return (
@@ -53,7 +55,6 @@ export default function LoginScreen() {
       <View style={styles.bottomArea}>
         <Text style={styles.bottomText}>로그인이 안되시나요?</Text>
 
-        {/* 나중에 /signup 화면 만들면 여기서 그쪽으로 이동 */}
         <Link href="/signup" asChild>
           <TouchableOpacity>
             <Text style={styles.bottomLink}>회원 가입</Text>

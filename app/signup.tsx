@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { styles } from "./css/index.styles";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -9,13 +9,14 @@ import {
   Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Link } from "expo-router";
 
 const years = Array.from({ length: 80 }, (_, i) => String(2024 - i)); // 2024 ~ 1945
 const months = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
 export default function SignupScreen() {
+  const router = useRouter(); // ★ expo-router 이동 기능
+
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordCheck, setPasswordCheck] = useState("");
@@ -34,25 +35,28 @@ export default function SignupScreen() {
       return;
     }
 
-    // TODO: 백엔드 중복확인 API 호출
+    // TODO: 백엔드 중복확인 API 연결 예정
     Alert.alert("확인 완료", "사용 가능한 아이디입니다.");
     setDuplicateChecked(true);
   };
 
-  // 회원가입
+  // 회원가입 버튼 클릭 시
   const handleSignupPress = () => {
     if (!id || !password || !passwordCheck || !name || !phone) {
       Alert.alert("알림", "모든 항목을 입력해주세요.");
       return;
     }
+
     if (password !== passwordCheck) {
       Alert.alert("알림", "비밀번호가 일치하지 않습니다.");
       return;
     }
+
     if (!duplicateChecked) {
       Alert.alert("알림", "아이디 중복확인을 먼저 해주세요.");
       return;
     }
+
     if (!birthYear || !birthMonth || !birthDay) {
       Alert.alert("알림", "생년월일을 모두 선택해주세요.");
       return;
@@ -65,7 +69,8 @@ export default function SignupScreen() {
       phone,
       birth: `${birthYear}-${birthMonth}-${birthDay}`,
     });
-        router.push("/profile");
+
+    router.push("/profile"); // ★ 프로필로 이동!
   };
 
   return (
@@ -75,7 +80,7 @@ export default function SignupScreen() {
         <Text style={styles.title}>회원가입</Text>
       </View>
 
-      {/* 아이디 + 중복확인 버튼 (한 박스 안) */}
+      {/* 아이디 + 중복확인 버튼 */}
       <View style={styles.idWrapper}>
         <TextInput
           style={styles.idInput}
@@ -117,18 +122,18 @@ export default function SignupScreen() {
         onChangeText={setName}
       />
 
-      {/*이메일 */}
+      {/* 이메일 입력 → phone 변수 쓰고 있으니 이름만 email로 변경 추천 */}
       <TextInput
         style={styles.input}
         placeholder="이메일 주소"
-        keyboardType="phone-pad"
+        keyboardType="email-address"
         value={phone}
         onChangeText={setPhone}
       />
 
       {/* 생년월일 */}
       <View style={styles.birthRow}>
-        {/* 년도 */}
+        {/* 년 */}
         <View style={styles.birthBox}>
           <Picker
             selectedValue={birthYear}
