@@ -1,40 +1,101 @@
-// app/Search.tsx
+import { useAuth } from "@/contexts/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
+import axios from "axios";
+// import * as Location from "expo-location"; // Location 사용 안 함
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
 
 import { searchStyles as styles } from "../css/Search.styles";
 
 const THEMES = ["카페", "공원", "전시회"];
 
+// 하드코딩된 시작 위치
+const HARDCODED_START_LAT = 37.498808;
+const HARDCODED_START_LNG = 126.859732;
+
 export default function SearchScreen() {
   const router = useRouter();
+  const { userToken } = useAuth();
 
-  const [start, setStart] = useState("");
+  const [start, setStart] = useState("출발지 (서울 시청 근처 고정)");
   const [end, setEnd] = useState("");
+
   const [activeTheme, setActiveTheme] = useState<string>("카페");
-  const [distance, setDistance] = useState<number>(5); // 0~10 km
-  const [time, setTime] = useState<number>(0.5); // 0~1 h
+  const [distance, setDistance] = useState<number>(5);
+  const [time, setTime] = useState<number>(0.5);
 
-  const handleSearch = () => {
-    console.log("검색 조건", {
-      start,
-      end,
-      theme: activeTheme,
-      distance,
-      time,
-    });
+  const handleSearch = async () => {
+    try {
+      if (!userToken) {
+        Alert.alert("알림", "로그인이 필요합니다.");
+        return;
+      }
 
-    // 🔥 검색 버튼 누르면 list.tsx로 이동
-    router.push("/record/list");
+      // 1. 출발지/도착지 좌표 하드코딩
+      const startLat = HARDCODED_START_LAT;
+      const startLng = HARDCODED_START_LNG;
+      const endLat = 37.498256;
+      const endLng = 126.867019;
+
+      // 2. API 요청
+      const preferPark = activeTheme === "공원";
+      const preferIndoor = activeTheme === "카페";
+
+      const avoidOverpass = false;
+      const avoidTunnel = false;
+
+      const res = await axios.post(
+        "http://rmate.kro.kr:4080/api/paths/search",
+        {
+          startLat,
+          startLng,
+          endLat,
+          endLng,
+          preferPark,
+          avoidOverpass,
+          avoidTunnel,
+          preferIndoor,
+        },
+        { headers: { Authorization: `Bearer ${userToken}` } }
+      );
+
+      // 3. 🚨 응답 데이터 구조 변경 및 전달
+      const singlePathData = res.data; // 서버에서 받은 단일 경로 객체
+
+      if (!singlePathData || !singlePathData.path) {
+        Alert.alert("알림", "경로 탐색에 실패했거나 결과가 없습니다.");
+        return;
+      }
+
+      // RecordScreen이 { paths: [...] } 형태를 기대하므로,
+      // 단일 경로 객체를 paths 배열 안에 넣어 새로운 객체를 만듭니다.
+      const dataToPass = {
+        paths: [singlePathData],
+        count: 1, // 경로가 1개임을 명시
+      };
+
+      console.log(
+        "RecordScreen에 전달할 최종 데이터:",
+        JSON.stringify(dataToPass, null, 2)
+      );
+
+      router.push({
+        pathname: "/record/list",
+        params: { searchResult: JSON.stringify(dataToPass) },
+      });
+    } catch (e) {
+      console.error("검색 실패", e);
+      Alert.alert("오류", "경로 검색 중 오류가 발생했습니다.");
+    }
   };
 
   return (
@@ -44,25 +105,25 @@ export default function SearchScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* 상단 헤더 */}
-<View style={styles.headerRow}>
-  <TouchableOpacity onPress={() => router.push("/home")}>
-    <Ionicons name="chevron-back" size={28} color="#001A72" />
-  </TouchableOpacity>
-  <Text style={styles.headerTitle}>코스 상세 검색</Text>
-</View>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => router.push("/home")}>
+          <Ionicons name="chevron-back" size={28} color="#001A72" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>코스 상세 검색</Text>
+      </View>
 
       {/* 출발지 / 도착지 */}
       <View style={styles.inputGroup}>
         <TextInput
           style={styles.textInput}
-          placeholder="출발지(기본은 현재위치)"
+          placeholder="출발지(현재 위치)"
           placeholderTextColor="#B0B0B0"
           value={start}
-          onChangeText={setStart}
+          editable={false}
         />
         <TextInput
           style={styles.textInput}
-          placeholder="도착지"
+          placeholder="도착지 (좌표 하드코딩됨)"
           placeholderTextColor="#B0B0B0"
           value={end}
           onChangeText={setEnd}
@@ -83,25 +144,17 @@ export default function SearchScreen() {
             return (
               <TouchableOpacity
                 key={theme}
-                style={[
-                  styles.chip,
-                  isActive && styles.chipActive,
-                ]}
+                style={[styles.chip, isActive && styles.chipActive]}
                 onPress={() => setActiveTheme(theme)}
               >
                 <Text
-                  style={[
-                    styles.chipText,
-                    isActive && styles.chipTextActive,
-                  ]}
+                  style={[styles.chipText, isActive && styles.chipTextActive]}
                 >
                   #{theme}
                 </Text>
               </TouchableOpacity>
             );
           })}
-
-          {/* ... 버튼 */}
           <TouchableOpacity style={styles.moreChip}>
             <Text style={styles.moreChipText}>...</Text>
           </TouchableOpacity>
@@ -124,9 +177,7 @@ export default function SearchScreen() {
         />
         <View style={styles.sliderLabelRow}>
           <Text style={styles.sliderSideText}>0km</Text>
-          <Text style={styles.sliderCenterText}>
-            {distance.toFixed(1)}km
-          </Text>
+          <Text style={styles.sliderCenterText}>{distance.toFixed(1)}km</Text>
           <Text style={styles.sliderSideText}>10km</Text>
         </View>
       </View>
@@ -147,19 +198,14 @@ export default function SearchScreen() {
         />
         <View style={styles.sliderLabelRow}>
           <Text style={styles.sliderSideText}>0h</Text>
-          <Text style={styles.sliderCenterText}>
-            {time.toFixed(1)}h
-          </Text>
+          <Text style={styles.sliderCenterText}>{time.toFixed(1)}h</Text>
           <Text style={styles.sliderSideText}>1h</Text>
         </View>
       </View>
 
       {/* 검색 버튼 */}
       <View style={styles.buttonWrapper}>
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={handleSearch}
-        >
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
           <Text style={styles.searchButtonText}>검색</Text>
         </TouchableOpacity>
       </View>
