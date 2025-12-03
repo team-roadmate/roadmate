@@ -32,7 +32,7 @@ export default function ReviewScreen() {
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/record/Saved")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>리뷰 보기</Text>

@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { recordStyles as s } from "../css/record.styles";
+import { recordStyles as s } from "../css/Saved.styles";
 
 export default function SavedScreen() {
   const router = useRouter();
@@ -11,7 +11,7 @@ export default function SavedScreen() {
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/home")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>저장한 코스</Text>

@@ -44,12 +44,12 @@ export default function SearchScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* 상단 헤더 */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#001A72" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>코스 상세 검색</Text>
-      </View>
+<View style={styles.headerRow}>
+  <TouchableOpacity onPress={() => router.push("/home")}>
+    <Ionicons name="chevron-back" size={28} color="#001A72" />
+  </TouchableOpacity>
+  <Text style={styles.headerTitle}>코스 상세 검색</Text>
+</View>
 
       {/* 출발지 / 도착지 */}
       <View style={styles.inputGroup}>

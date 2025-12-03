@@ -11,7 +11,7 @@ export default function RecordScreen() {
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/record/Search")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>최근 기록</Text>

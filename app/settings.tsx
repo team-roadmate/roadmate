@@ -36,7 +36,7 @@ export default function SettingsScreen() {
     >
       {/* 상단 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/home")}>
           <Ionicons name="chevron-back" size={26} color="#001A72" />
         </TouchableOpacity>
         <Text style={s.headerTitle}>환경 설정</Text>
