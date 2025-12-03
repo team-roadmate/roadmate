@@ -1,15 +1,19 @@
+import { AuthProvider } from "@/contexts/AuthContext";
 import { Drawer } from "expo-router/drawer";
+import React from "react";
 import CustomDrawer from "./CustomDrawer";
 
 export default function RootLayout() {
   return (
-    <Drawer
-      screenOptions={{
-        headerShown: false,
-        drawerType: "slide",
-        drawerStyle: { width: 280 },
-      }}
-      drawerContent={(props) => <CustomDrawer {...props} />}
-    />
+    <AuthProvider>
+      <Drawer
+        screenOptions={{
+          headerShown: false,
+          drawerType: "slide",
+          drawerStyle: { width: 280 },
+        }}
+        drawerContent={(props) => <CustomDrawer {...props} />}
+      />
+    </AuthProvider>
   );
 }
