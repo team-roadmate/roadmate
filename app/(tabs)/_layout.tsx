@@ -1,11 +1,16 @@
-// app/(tabs)/_layout.tsx
-import { Tabs, useRouter } from "expo-router";
+// app/_layout.tsx
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useAuthStore } from "../../src/store/authStore";
+import HomeScreen from "./home";
 
-export default function TabsLayout() {
-  const router = useRouter();
+const Drawer = createDrawerNavigator();
+
+export default function RootLayout() {
   const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -14,14 +19,13 @@ export default function TabsLayout() {
   }, [isAuthenticated]);
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "홈",
-          tabBarIcon: () => null, // 아이콘은 나중에 추가
-        }}
-      />
-    </Tabs>
+    <>
+      <StatusBar style="dark" />
+      <Drawer.Navigator
+        screenOptions={{ headerShown: false, drawerPosition: "right" }}
+      >
+        <Drawer.Screen name="Home" component={HomeScreen} />
+      </Drawer.Navigator>
+    </>
   );
 }
