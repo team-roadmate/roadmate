@@ -2,17 +2,16 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useAuthStore } from "../../src/store/authStore";
+import { styles } from "./css/index.styles";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -23,15 +22,44 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSignup = async () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert("오류", "모든 항목을 입력해주세요.");
-      return;
+  // 에러 상태 추가
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const handleSignupPress = async () => {
+    let hasError = false;
+
+    // 에러 메시지 초기화
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+
+    if (!name) {
+      setNameError("이름을 입력해주세요.");
+      hasError = true;
+    }
+    if (!email) {
+      setEmailError("이메일 주소를 입력해주세요.");
+      hasError = true;
+    }
+    if (!password) {
+      setPasswordError("비밀번호를 입력해주세요.");
+      hasError = true;
+    }
+    if (!confirmPassword) {
+      setConfirmPasswordError("비밀번호를 다시 입력해주세요.");
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setPasswordError("비밀번호가 일치하지 않습니다.");
+      setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
+      hasError = true;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert("오류", "비밀번호가 일치하지 않습니다.");
-      return;
+    if (hasError) {
+      return; // 에러가 있으면 회원가입 시도 중단
     }
 
     try {
@@ -47,124 +75,102 @@ export default function RegisterScreen() {
     }
   };
 
+  const renderLabelWithOptionalError = (
+    label: string,
+    errorMessage: string
+  ) => (
+    <View style={styles.labelContainer}>
+      <Text style={styles.labelText}>{label}</Text>
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
+    </View>
+  );
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text style={styles.title}>회원가입</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>회원가입</Text>
+      </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="이름"
-            value={name}
-            onChangeText={setName}
-            editable={!isLoading}
-          />
+      <View style={styles.formArea}>
+        {/* 이름 입력 */}
+        {renderLabelWithOptionalError("이름", nameError)}
+        <TextInput
+          style={styles.input}
+          placeholder="이름을 입력해주세요."
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            setNameError(""); // 입력 시 에러 메시지 초기화
+          }}
+          editable={!isLoading}
+        />
 
-          <TextInput
-            style={styles.input}
-            placeholder="이메일"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!isLoading}
-          />
+        {/* 이메일 입력 */}
+        {renderLabelWithOptionalError("이메일 주소", emailError)}
+        <TextInput
+          style={styles.input}
+          placeholder="이메일 주소"
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            setEmailError(""); // 입력 시 에러 메시지 초기화
+          }}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          editable={!isLoading}
+        />
 
-          <TextInput
-            style={styles.input}
-            placeholder="비밀번호"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!isLoading}
-          />
+        {/* 비밀번호 입력 */}
+        {renderLabelWithOptionalError("비밀번호", passwordError)}
+        <TextInput
+          style={styles.input}
+          placeholder="문자, 숫자, 특수문자 포함 8~20자"
+          secureTextEntry
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setPasswordError(""); // 입력 시 에러 메시지 초기화
+          }}
+          editable={!isLoading}
+        />
 
-          <TextInput
-            style={styles.input}
-            placeholder="비밀번호 확인"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            editable={!isLoading}
-          />
+        {/* 비밀번호 재입력 */}
+        {renderLabelWithOptionalError("비밀번호 재입력", confirmPasswordError)}
+        <TextInput
+          style={styles.input}
+          placeholder="비밀번호 재입력"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            setConfirmPasswordError(""); // 입력 시 에러 메시지 초기화
+          }}
+          editable={!isLoading}
+        />
+      </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleSignup}
-            disabled={isLoading}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? "가입 중..." : "회원가입"}
-            </Text>
-          </TouchableOpacity>
+      <View style={styles.middleArea}>
+        <TouchableOpacity
+          style={styles.arrowButton}
+          onPress={handleSignupPress}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.arrowText}>→</Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => router.back()}
-            disabled={isLoading}
-          >
-            <Text style={styles.linkText}>이미 계정이 있으신가요? 로그인</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={styles.bottomArea}>
+        <Text style={styles.bottomText}>이미 계정이 있으신가요?</Text>
+        <TouchableOpacity onPress={() => router.back()} disabled={isLoading}>
+          <Text style={styles.bottomLink}>로그인</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 40,
-    textAlign: "center",
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    height: 50,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonDisabled: {
-    backgroundColor: "#ccc",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  linkButton: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#007AFF",
-    fontSize: 14,
-  },
-});

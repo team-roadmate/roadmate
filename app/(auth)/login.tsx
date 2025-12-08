@@ -2,16 +2,15 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useAuthStore } from "../../src/store/authStore";
+import { styles } from "./css/index.styles";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,11 +18,27 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("오류", "이메일과 비밀번호를 입력해주세요.");
-      return;
+  const handleLoginPress = async () => {
+    let hasError = false;
+
+    // 에러 메시지 초기화
+    setEmailError("");
+    setPasswordError("");
+
+    if (!email) {
+      setEmailError("이메일을 입력해주세요.");
+      hasError = true;
+    }
+    if (!password) {
+      setPasswordError("비밀번호를 입력해주세요.");
+      hasError = true;
+    }
+
+    if (hasError) {
+      return; // 에러가 있으면 로그인 시도 중단
     }
 
     try {
@@ -34,102 +49,78 @@ export default function LoginScreen() {
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>로그인</Text>
+  const renderLabelWithOptionalError = (
+    label: string,
+    errorMessage: string
+  ) => (
+    <View style={styles.labelContainer}>
+      <Text style={styles.labelText}>{label}</Text>
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
+    </View>
+  );
 
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>로그인</Text>
+      </View>
+
+      <View style={styles.formArea}>
+        {/* 이메일 입력 */}
+        {renderLabelWithOptionalError("이메일 주소", emailError)}
         <TextInput
           style={styles.input}
           placeholder="이메일"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            setEmail(text);
+            setEmailError(""); // 입력 시 에러 메시지 초기화
+          }}
           autoCapitalize="none"
           keyboardType="email-address"
           editable={!isLoading}
         />
 
+        {/* 비밀번호 입력 */}
+        {renderLabelWithOptionalError("비밀번호", passwordError)}
         <TextInput
           style={styles.input}
           placeholder="비밀번호"
-          value={password}
-          onChangeText={setPassword}
           secureTextEntry
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setPasswordError(""); // 입력 시 에러 메시지 초기화
+          }}
           editable={!isLoading}
         />
+      </View>
 
+      <View style={styles.middleArea}>
         <TouchableOpacity
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={handleLogin}
+          style={styles.arrowButton}
+          onPress={handleLoginPress}
           disabled={isLoading}
         >
-          <Text style={styles.buttonText}>
-            {isLoading ? "로그인 중..." : "로그인"}
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.arrowText}>→</Text>
+          )}
         </TouchableOpacity>
+      </View>
 
+      <View style={styles.bottomArea}>
+        <Text style={styles.bottomText}>로그인이 안되시나요?</Text>
         <TouchableOpacity
-          style={styles.linkButton}
           onPress={() => router.push("/(auth)/register")}
           disabled={isLoading}
         >
-          <Text style={styles.linkText}>계정이 없으신가요? 회원가입</Text>
+          <Text style={styles.bottomLink}>회원 가입</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 40,
-    textAlign: "center",
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    height: 50,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonDisabled: {
-    backgroundColor: "#ccc",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  linkButton: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#007AFF",
-    fontSize: 14,
-  },
-});
