@@ -1,7 +1,7 @@
 // app/record/detail_record.tsx
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import React from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { detailRecordStyles as s } from "../css/detail_record.styles";
 
 export default function DetailRecord() {
@@ -10,7 +10,7 @@ export default function DetailRecord() {
   return (
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.push("/record/list")}>
+        <TouchableOpacity onPress={() => router.push("./list")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>코스 상세 보기</Text>

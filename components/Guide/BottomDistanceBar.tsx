@@ -3,7 +3,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 type BottomDistanceBarProps = {
-  distance: number;  // m 단위 거리
+  distance: number; // m 단위 거리
   direction: string; // "직진", "좌회전", "우회전" 같은 텍스트
 };
 

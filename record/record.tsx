@@ -1,28 +1,28 @@
-// app/record/Saved.tsx
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+// app/record/record.tsx
 import { useRouter } from "expo-router";
-import { recordStyles as s } from "../css/Saved.styles";
+import React from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { recordStyles as s } from "../css/record.styles";
 
-export default function SavedScreen() {
+export default function RecordScreen() {
   const router = useRouter();
 
   return (
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.push("/home")}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
-        <Text style={s.headerTitle}>저장한 코스</Text>
+        <Text style={s.headerTitle}>최근 기록</Text>
       </View>
 
-      <Text style={s.subText}>저장한 코스 목록입니다:</Text>
+      <Text style={s.subText}>총 n개의 코스가 검색되었습니다:</Text>
 
       {/* 정렬 박스 */}
       <View style={s.sortRow}>
         <TouchableOpacity style={s.sortBox}>
-          <Text style={s.sortText}>거리순</Text>
+          <Text style={s.sortText}>날짜순</Text>
           <Text>▼</Text>
         </TouchableOpacity>
       </View>
@@ -62,22 +62,19 @@ export default function SavedScreen() {
           <View style={s.btnRow}>
             <TouchableOpacity
               style={s.detailBtn}
-              onPress={() => router.push("/record/defail_record")}
+              onPress={() => router.push("./detail_record")}
             >
               <Text style={s.detailText}>상세 보기</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-                style={s.reviewBtn}
-                onPress={() => router.push("/record/review")}
-            >
+            <TouchableOpacity style={s.reviewBtn}>
               <Text style={s.reviewText}>리뷰 보기</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      {/* 🔹 카드 2 */}
+      {/* 🔹 카드 2 (복사해서 아래에 하나 더) */}
       <View style={s.card}>
         <View style={s.cardImage}>
           <Text style={s.imageText}>이미지</Text>
@@ -112,7 +109,7 @@ export default function SavedScreen() {
           <View style={s.btnRow}>
             <TouchableOpacity
               style={s.detailBtn}
-              onPress={() => router.push("/record/defail_record")}
+              onPress={() => router.push("./detail_record")}
             >
               <Text style={s.detailText}>상세 보기</Text>
             </TouchableOpacity>

@@ -56,52 +56,52 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-/// 생년월일 라벨
- label: {
-   fontSize: 14,
-   fontWeight: "600",
-   color: "#222222",
-   marginTop: 8,
-   marginBottom: 6,
- },
+  /// 생년월일 라벨
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#222222",
+    marginTop: 8,
+    marginBottom: 6,
+  },
 
- // 생년월일: 년 / 월 / 일 가로 정렬
-birthRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginBottom: 16,
-},
+  // 생년월일: 년 / 월 / 일 가로 정렬
+  birthRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
 
-birthBox: {
-  flex: 1,
-  height: 52,
-  borderWidth: 1,
-  borderColor: "#E5E5E5",
-  borderRadius: 12,
-  backgroundColor: "#FAFAFA",
-  justifyContent: "center",
-  paddingHorizontal: 12,
-  marginRight: 8,
-  overflow: "hidden",     // ⭐ Picker 기본 border 안 보이도록 잘라냄
-},
+  birthBox: {
+    flex: 1,
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    borderRadius: 12,
+    backgroundColor: "#FAFAFA",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    marginRight: 8,
+    overflow: "hidden", // ⭐ Picker 기본 border 안 보이도록 잘라냄
+  },
 
-birthPicker: {
-  fontSize: 14,
-  color: "#555555",
+  birthPicker: {
+    fontSize: 14,
+    color: "#555555",
 
-  // 기본 드롭다운 테두리 제거
-  borderWidth: 0,
-  borderColor: "transparent",
-  backgroundColor: "transparent",
+    // 기본 드롭다운 테두리 제거
+    borderWidth: 0,
+    borderColor: "transparent",
+    backgroundColor: "transparent",
 
-  // 웹 환경 기본 select outline 제거
-  outlineStyle: "none",
-  outlineWidth: 0,
-  outlineColor: "transparent",
+    // 웹 환경 기본 select outline 제거
+    outlineStyle: "none",
+    outlineWidth: 0,
+    outlineColor: "transparent",
 
-  // 브라우저 기본 스타일 제거
-  appearance: "none",
-},
+    // 브라우저 기본 스타일 제거
+    appearance: "none",
+  },
 
   /* ------------------------ */
   /* 빨간 에러 메시지        */
