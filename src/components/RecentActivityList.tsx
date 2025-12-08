@@ -38,7 +38,7 @@ export default function RecentActivityList({
   isLoading,
 }: ListProps) {
   const handleItemPress = (routeId: number) => {
-    router.push(`/(tabs)/history/${routeId}`);
+    router.push("/detail_record");
   };
 
   // 로딩 중, 데이터가 없을 때 스켈레톤 표시
@@ -60,7 +60,7 @@ export default function RecentActivityList({
     <View style={listStyles.container}>
       <View style={listStyles.header}>
         <Text style={listStyles.title}>최근 기록</Text>
-        <TouchableOpacity onPress={() => router.push("/history-all")}>
+        <TouchableOpacity onPress={() => router.push("/record")}>
           <Text style={listStyles.seeMore}>더 보기</Text>
         </TouchableOpacity>
       </View>

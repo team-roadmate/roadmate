@@ -17,12 +17,8 @@ export default function RootLayout() {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="home" />
-        <Stack.Screen name="menu" />
-        <Stack.Screen name="courses" />
-        <Stack.Screen name="achievements" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="review" />
+        <Stack.Screen name="search" />
+        <Stack.Screen name="list" />
       </Stack>
     </>
   );

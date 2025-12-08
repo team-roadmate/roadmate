@@ -65,7 +65,7 @@ export default function MenuScreen() {
     // 💡 메뉴 항목에 따른 네비게이션 로직 적용 (스택 push)
     switch (menuTitle) {
       case "저장한 코스":
-        router.push("/courses"); // 예시 경로: app/courses/saved.js
+        router.push("/saved"); // 예시 경로: app/courses/saved.js
         break;
       case "배지 및 업적":
         router.push("/achievements"); // 예시 경로: app/achievements/index.js
@@ -89,8 +89,11 @@ export default function MenuScreen() {
       {/* 닫기 버튼: 우측 상단에 고정 */}
       <CloseButton onPress={handleClosePress} />
 
-      {/* 프로필 이미지/정보 영역 */}
-      <View style={styles.profileArea}>
+      {/* 프로필 영역 스타일 (이미지와 닉네임을 포함) */}
+      <TouchableOpacity
+        style={styles.profileArea}
+        onPress={() => router.push("/profile")} // 클릭 시 프로필 화면 이동
+      >
         {/* 프로필 이미지 플레이스홀더 */}
         <View style={styles.profileImagePlaceholder}>
           <Text style={styles.imagePlaceholderText}>이미지</Text>
@@ -98,10 +101,9 @@ export default function MenuScreen() {
 
         {/* 닉네임 텍스트 컨테이너 (이미지 옆에 배치) */}
         <View style={styles.profileTextContainer}>
-          {/* 닉네임 텍스트 (검은색) */}
           <Text style={styles.nicknameText}>{userNickname}</Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* 메뉴 항목 목록 */}
       <View style={styles.menuList}>

@@ -3,14 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RecentActivityList from "../../src/components/RecentActivityList";
 import WeatherSummaryCard from "../../src/components/WeatherSummaryCard";
@@ -54,7 +47,7 @@ export default function HomeScreen() {
         setLocationError(null);
       } else {
         setLocationError("위치 권한이 거부되어 기본 위치 날씨를 가져옵니다.");
-        locationName = "기본 위치 (부천)";
+        locationName = "기본 위치";
       }
     } catch (e) {
       setLocationError("위치 정보 획득 중 오류가 발생했습니다.");
@@ -91,11 +84,13 @@ export default function HomeScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F9F9F9" }}>
       <View style={styles.container}>
         <View style={styles.searchBox}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="🔍 검색어를 입력해주세요"
-            placeholderTextColor="#999"
-          />
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={() => router.push("/(search)/search")} // 원하는 화면 경로로 변경
+          >
+            <Text style={styles.searchButtonText}>🔍 검색어 입력</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}>
             <Text style={styles.menuIcon}>☰</Text>
           </TouchableOpacity>
@@ -106,7 +101,7 @@ export default function HomeScreen() {
         <View style={styles.dashboardContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statIcon}>🏃</Text>
-            <Text style={styles.statNumber}>6,320</Text>
+            <Text style={styles.statNumber}>1,557</Text>
           </View>
 
           <WeatherSummaryCard
@@ -146,7 +141,17 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     marginBottom: 12,
   },
-  searchInput: { flex: 1, fontSize: 16, color: "#333", paddingVertical: 6 },
+  searchButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    justifyContent: "center",
+  },
+  searchButtonText: {
+    fontSize: 16,
+    color: "#999",
+  },
   menuButton: { marginLeft: 12, padding: 6 },
   menuIcon: { fontSize: 22, color: "#333" },
   dashboardContainer: {
