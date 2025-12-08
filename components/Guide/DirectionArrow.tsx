@@ -15,12 +15,12 @@ export default function DirectionArrow({
     direction === "up"
       ? "↑"
       : direction === "down"
-        ? "↓"
-        : direction === "left"
-          ? "←"
-          : direction === "right"
-            ? "→"
-            : "종료";
+      ? "↓"
+      : direction === "left"
+      ? "←"
+      : direction === "right"
+      ? "→"
+      : "종료";
 
   return (
     <Pressable onPress={onPress}>

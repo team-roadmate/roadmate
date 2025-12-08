@@ -1,13 +1,6 @@
 import { useRouter } from "expo-router"; // expo-router에서 제공하는 useRouter 훅
 import React, { useState } from "react";
-import {
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 const RouteCompletePage = () => {
   // expo-router에서 제공하는 router 객체 사용
@@ -87,10 +80,7 @@ const RouteCompletePage = () => {
         <TouchableOpacity style={styles.button} onPress={handleSaveClick}>
           <Text style={styles.buttonText}>저장하기</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.buttonCancel}
-          onPress={handleCancelClick}
-        >
+        <TouchableOpacity style={styles.buttonCancel} onPress={handleCancelClick}>
           <Text style={styles.buttonText}>저장 안 함</Text>
         </TouchableOpacity>
       </View>
@@ -101,16 +91,10 @@ const RouteCompletePage = () => {
           <View style={styles.modalContent}>
             <Text>저장하시겠습니까?</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleCancelSave}
-              >
+              <TouchableOpacity style={styles.modalButton} onPress={handleCancelSave}>
                 <Text>취소</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleConfirmSave}
-              >
+              <TouchableOpacity style={styles.modalButton} onPress={handleConfirmSave}>
                 <Text>확인</Text>
               </TouchableOpacity>
             </View>

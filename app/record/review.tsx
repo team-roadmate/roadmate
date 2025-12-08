@@ -1,16 +1,16 @@
 // app/record/review.tsx
-import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Image,
-  ScrollView,
+  View,
   Text,
+  ScrollView,
   TextInput,
   TouchableOpacity,
-  View,
+  Image,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { reviewStyles as s } from "../css/review.styles";
+import * as ImagePicker from "expo-image-picker";
 
 export default function ReviewScreen() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function ReviewScreen() {
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.push("./Saved")}>
+        <TouchableOpacity onPress={() => router.push("/record/Saved")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>리뷰 보기</Text>

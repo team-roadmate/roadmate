@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
-import { styles } from "../css/index.styles";
+import { styles } from "./css/index.styles";
 
 export default function LoginScreen() {
   const router = useRouter();

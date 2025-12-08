@@ -29,7 +29,7 @@ export default function Home() {
         <TouchableOpacity
           style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
           activeOpacity={0.8}
-          onPress={() => router.push("../record/Search")} // 🔥 검색창 터치 시 이동
+          onPress={() => router.push("/record/Search")} // 🔥 검색창 터치 시 이동
         >
           <Ionicons name="search" size={26} color="#001A72" />
           <Text style={styles.searchInput}>검색어를 입력해주세요</Text>

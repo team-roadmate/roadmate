@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: Props) => {
     try {
       const response = await axios.post(
         "http://rmate.kro.kr:4080/api/auth/login",
-        { email, password },
+        { email, password }
       );
       const result = response.data;
 

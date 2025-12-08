@@ -85,7 +85,6 @@ export const recordStyles = StyleSheet.create({
 
   infoRow: {
     flexDirection: "row",
-    //justifyContent: "space-between",
     marginBottom: 12,
   },
 
@@ -119,7 +118,7 @@ export const recordStyles = StyleSheet.create({
   scoreRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 20,
   },
 
   scoreLabel: {
@@ -133,39 +132,27 @@ export const recordStyles = StyleSheet.create({
     color: "#14194A",
   },
 
-  btnRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
+  /* 🔥 여기부터 변경된 디자인 */
+
+  centerBtnRow: {
+    width: "100%",
+    alignItems: "center",
   },
 
-  detailBtn: {
-    flex: 1,
-    height: 44,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+  bigDetailBtn: {
+    width: "88%",        // 가운데 크게
+    height: 50,
+    borderRadius: 10,
     backgroundColor: "#14194A",
-  },
-
-  detailText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  reviewBtn: {
-    flex: 1,
-    height: 44,
-    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#9BCB3B",
+    marginTop: 4,
+    marginBottom: 8,
   },
 
-  reviewText: {
-    color: "#1F2A3C",
-    fontSize: 15,
+  bigDetailText: {
+    color: "#FFFFFF",
+    fontSize: 17,
     fontWeight: "700",
   },
 });

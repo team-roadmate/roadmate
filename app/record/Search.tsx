@@ -1,15 +1,15 @@
 // app/Search.tsx
-import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ScrollView,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  ScrollView,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
 
 import { searchStyles as styles } from "../css/Search.styles";
 
@@ -34,7 +34,7 @@ export default function SearchScreen() {
     });
 
     // 🔥 검색 버튼 누르면 list.tsx로 이동
-    router.push("./list");
+    router.push("/record/list");
   };
 
   return (
@@ -44,12 +44,12 @@ export default function SearchScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* 상단 헤더 */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.push("/home")}>
-          <Ionicons name="chevron-back" size={28} color="#001A72" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>코스 상세 검색</Text>
-      </View>
+<View style={styles.headerRow}>
+  <TouchableOpacity onPress={() => router.push("/home")}>
+    <Ionicons name="chevron-back" size={28} color="#001A72" />
+  </TouchableOpacity>
+  <Text style={styles.headerTitle}>코스 상세 검색</Text>
+</View>
 
       {/* 출발지 / 도착지 */}
       <View style={styles.inputGroup}>
@@ -83,11 +83,17 @@ export default function SearchScreen() {
             return (
               <TouchableOpacity
                 key={theme}
-                style={[styles.chip, isActive && styles.chipActive]}
+                style={[
+                  styles.chip,
+                  isActive && styles.chipActive,
+                ]}
                 onPress={() => setActiveTheme(theme)}
               >
                 <Text
-                  style={[styles.chipText, isActive && styles.chipTextActive]}
+                  style={[
+                    styles.chipText,
+                    isActive && styles.chipTextActive,
+                  ]}
                 >
                   #{theme}
                 </Text>
@@ -118,7 +124,9 @@ export default function SearchScreen() {
         />
         <View style={styles.sliderLabelRow}>
           <Text style={styles.sliderSideText}>0km</Text>
-          <Text style={styles.sliderCenterText}>{distance.toFixed(1)}km</Text>
+          <Text style={styles.sliderCenterText}>
+            {distance.toFixed(1)}km
+          </Text>
           <Text style={styles.sliderSideText}>10km</Text>
         </View>
       </View>
@@ -139,14 +147,19 @@ export default function SearchScreen() {
         />
         <View style={styles.sliderLabelRow}>
           <Text style={styles.sliderSideText}>0h</Text>
-          <Text style={styles.sliderCenterText}>{time.toFixed(1)}h</Text>
+          <Text style={styles.sliderCenterText}>
+            {time.toFixed(1)}h
+          </Text>
           <Text style={styles.sliderSideText}>1h</Text>
         </View>
       </View>
 
       {/* 검색 버튼 */}
       <View style={styles.buttonWrapper}>
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={handleSearch}
+        >
           <Text style={styles.searchButtonText}>검색</Text>
         </TouchableOpacity>
       </View>

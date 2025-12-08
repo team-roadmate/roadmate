@@ -1,22 +1,24 @@
 // app/settings.tsx
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
-import { settingsStyles as s } from "../css/Settings.styles";
+import { settingsStyles as s } from "./css/Settings.styles";
 
 export default function SettingsScreen() {
   const router = useRouter();
 
   // 지도 글자 크기 (가 / 나 / 다)
-  const [fontSizeLevel, setFontSizeLevel] = useState<
-    "small" | "medium" | "large"
-  >("medium");
+  const [fontSizeLevel, setFontSizeLevel] = useState<"small" | "medium" | "large">("medium");
 
   // 지도 타입 (일반 / 위성 / 지형)
-  const [mapType, setMapType] = useState<"normal" | "satellite" | "terrain">(
-    "satellite",
-  );
+  const [mapType, setMapType] = useState<"normal" | "satellite" | "terrain">("satellite");
 
   // 알림 스위치들
   const [weatherAlert, setWeatherAlert] = useState(false);
@@ -38,8 +40,7 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-back" size={26} color="#001A72" />
         </TouchableOpacity>
         <Text style={s.headerTitle}>환경 설정</Text>
-        <View style={{ width: 26 }} />
-        {/* 오른쪽 정렬용 더미 */}
+        <View style={{ width: 26 }} />{/* 오른쪽 정렬용 더미 */}
       </View>
 
       {/* 섹션: 지도 */}
@@ -112,7 +113,10 @@ export default function SettingsScreen() {
           onPress={() => setMapType("normal")}
         >
           <Text
-            style={[s.mapTypeText, mapType === "normal" && s.mapTypeTextActive]}
+            style={[
+              s.mapTypeText,
+              mapType === "normal" && s.mapTypeTextActive,
+            ]}
           >
             일반
           </Text>
@@ -188,7 +192,12 @@ export default function SettingsScreen() {
           style={[s.langBtn, language === "ko" && s.langBtnActive]}
           onPress={() => setLanguage("ko")}
         >
-          <Text style={[s.langText, language === "ko" && s.langTextActive]}>
+          <Text
+            style={[
+              s.langText,
+              language === "ko" && s.langTextActive,
+            ]}
+          >
             한국어
           </Text>
         </TouchableOpacity>
@@ -197,7 +206,12 @@ export default function SettingsScreen() {
           style={[s.langBtn, language === "en" && s.langBtnActive]}
           onPress={() => setLanguage("en")}
         >
-          <Text style={[s.langText, language === "en" && s.langTextActive]}>
+          <Text
+            style={[
+              s.langText,
+              language === "en" && s.langTextActive,
+            ]}
+          >
             영어
           </Text>
         </TouchableOpacity>

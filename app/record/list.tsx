@@ -1,7 +1,7 @@
 // app/record/list.tsx
-import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { recordStyles as s } from "../css/record.styles";
 
 export default function RecordScreen() {
@@ -11,7 +11,7 @@ export default function RecordScreen() {
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.push("./Search")}>
+        <TouchableOpacity onPress={() => router.push("/record/Search")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>최근 기록</Text>
@@ -63,7 +63,7 @@ export default function RecordScreen() {
           <View style={s.centerBtnRow}>
             <TouchableOpacity
               style={s.bigDetailBtn}
-              onPress={() => router.push("./defail_record")}
+              onPress={() => router.push("/record/defail_record")}
             >
               <Text style={s.bigDetailText}>상세 보기</Text>
             </TouchableOpacity>
@@ -107,7 +107,7 @@ export default function RecordScreen() {
           <View style={s.centerBtnRow}>
             <TouchableOpacity
               style={s.bigDetailBtn}
-              onPress={() => router.push("./defail_record")}
+              onPress={() => router.push("/record/defail_record")}
             >
               <Text style={s.bigDetailText}>상세 보기</Text>
             </TouchableOpacity>

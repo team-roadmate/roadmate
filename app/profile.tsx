@@ -1,22 +1,27 @@
 // app/profile.tsx
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 
 import { useRouter } from "expo-router";
 
 // 프로필 전용 스타일
-import { styles as commonStyles } from "../css/index.styles";
-import { styles as profileStyles } from "../css/profile.style";
+import { styles as profileStyles } from "./css/profile.style";
+import { styles as commonStyles } from "./css/index.styles";
 
 const BASIC_IMAGES = [
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
-  require("../img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
+  require("./img/cat.jpeg"),
 ];
 
 export default function ProfileScreen() {

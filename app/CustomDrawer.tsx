@@ -1,9 +1,15 @@
 // app/CustomDrawer.tsx
-import { Ionicons } from "@expo/vector-icons";
-import { DrawerContentScrollView } from "@react-navigation/drawer";
-import { useRouter } from "expo-router";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { DrawerContentScrollView } from "@react-navigation/drawer";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 export default function CustomDrawer(props: any) {
   const router = useRouter();
@@ -16,7 +22,7 @@ export default function CustomDrawer(props: any) {
       {/* 프로필 영역 */}
       <View style={styles.profileSection}>
         <Image
-          source={require("../img/cat.jpeg")} // 임시 프로필 이미지
+          source={require("./img/cat.jpeg")} // 임시 프로필 이미지
           style={styles.profileImage}
         />
         <Text style={styles.username}>사용자 닉네임</Text>

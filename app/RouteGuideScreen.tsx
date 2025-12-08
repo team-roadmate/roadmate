@@ -1,12 +1,12 @@
 // screens/RouteGuideScreen.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import BottomDistanceBar from "../components/Guide/BottomDistanceBar";
@@ -16,7 +16,9 @@ import EndGuideModal from "../components/Guide/EndGuideModal";
 import LocationTooltip from "../components/Guide/LocationTooltip";
 import RouteGuideHeader from "../components/Guide/RouteGuideHeader";
 
-import useCurrentLocation from "../hooks/useCurrentLocation";
+import useCurrentLocation from "../app/hooks/useCurrentLocation";
+
+
 
 const ROUTE_API_URL = "https://example.com/api/route";
 
@@ -104,12 +106,7 @@ export default function RouteGuideScreen({
   };
 
   // 3) bearing 계산
-  const getBearing = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ) => {
+  const getBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const toRad = (v: number) => (v * Math.PI) / 180;
     const toDeg = (v: number) => (v * 180) / Math.PI;
 
@@ -214,8 +211,8 @@ export default function RouteGuideScreen({
           directionText === "좌회전"
             ? "left"
             : directionText === "우회전"
-              ? "right"
-              : "up"
+            ? "right"
+            : "up"
         }
       />
 

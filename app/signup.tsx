@@ -1,8 +1,14 @@
-import { Picker } from "@react-native-picker/picker";
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { styles } from "../css/index.styles";
+import { styles } from "./css/index.styles";
+import { useRouter } from "expo-router";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
 
 const years = Array.from({ length: 80 }, (_, i) => String(2024 - i)); // 2024 ~ 1945
 const months = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -85,10 +91,7 @@ export default function SignupScreen() {
             setDuplicateChecked(false);
           }}
         />
-        <TouchableOpacity
-          style={styles.checkButton}
-          onPress={handleCheckDuplicate}
-        >
+        <TouchableOpacity style={styles.checkButton} onPress={handleCheckDuplicate}>
           <Text style={styles.checkButtonText}>중복 확인</Text>
         </TouchableOpacity>
       </View>
@@ -175,10 +178,7 @@ export default function SignupScreen() {
 
       {/* 화살표 버튼 */}
       <View style={styles.middleArea}>
-        <TouchableOpacity
-          style={styles.arrowButton}
-          onPress={handleSignupPress}
-        >
+        <TouchableOpacity style={styles.arrowButton} onPress={handleSignupPress}>
           <Text style={styles.arrowText}>→</Text>
         </TouchableOpacity>
       </View>
