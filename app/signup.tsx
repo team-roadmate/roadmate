@@ -8,14 +8,9 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-
-const years = Array.from({ length: 80 }, (_, i) => String(2024 - i)); // 2024 ~ 1945
-const months = Array.from({ length: 12 }, (_, i) => String(i + 1));
-const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
 export default function SignupScreen() {
-  const router = useRouter(); // ★ expo-router 이동 기능
+  const router = useRouter();
 
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
@@ -24,9 +19,7 @@ export default function SignupScreen() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [birthYear, setBirthYear] = useState("");
-  const [birthMonth, setBirthMonth] = useState("");
-  const [birthDay, setBirthDay] = useState("");
+  // [제거됨] 생년월일 관련 상태 변수 삭제
 
   // 중복확인
   const handleCheckDuplicate = () => {
@@ -57,20 +50,17 @@ export default function SignupScreen() {
       return;
     }
 
-    if (!birthYear || !birthMonth || !birthDay) {
-      Alert.alert("알림", "생년월일을 모두 선택해주세요.");
-      return;
-    }
+    // [제거됨] 생년월일 유효성 검사 로직 삭제
 
     console.log("signup try", {
       id,
       password,
       name,
       phone,
-      birth: `${birthYear}-${birthMonth}-${birthDay}`,
+      // [제거됨] birth 데이터 전송 로직 삭제
     });
 
-    router.push("/profile"); // ★ 프로필로 이동!
+    router.push("/profile");
   };
 
   return (
@@ -122,7 +112,7 @@ export default function SignupScreen() {
         onChangeText={setName}
       />
 
-      {/* 이메일 입력 → phone 변수 쓰고 있으니 이름만 email로 변경 추천 */}
+      {/* 이메일 주소 */}
       <TextInput
         style={styles.input}
         placeholder="이메일 주소"
@@ -131,50 +121,7 @@ export default function SignupScreen() {
         onChangeText={setPhone}
       />
 
-      {/* 생년월일 */}
-      <View style={styles.birthRow}>
-        {/* 년 */}
-        <View style={styles.birthBox}>
-          <Picker
-            selectedValue={birthYear}
-            onValueChange={(value) => setBirthYear(value)}
-            style={styles.birthPicker}
-          >
-            <Picker.Item label="년도" value="" />
-            {years.map((y) => (
-              <Picker.Item key={y} label={y} value={y} />
-            ))}
-          </Picker>
-        </View>
-
-        {/* 월 */}
-        <View style={styles.birthBox}>
-          <Picker
-            selectedValue={birthMonth}
-            onValueChange={(value) => setBirthMonth(value)}
-            style={styles.birthPicker}
-          >
-            <Picker.Item label="월" value="" />
-            {months.map((m) => (
-              <Picker.Item key={m} label={m} value={m} />
-            ))}
-          </Picker>
-        </View>
-
-        {/* 일 */}
-        <View style={styles.birthBox}>
-          <Picker
-            selectedValue={birthDay}
-            onValueChange={(value) => setBirthDay(value)}
-            style={styles.birthPicker}
-          >
-            <Picker.Item label="일" value="" />
-            {days.map((d) => (
-              <Picker.Item key={d} label={d} value={d} />
-            ))}
-          </Picker>
-        </View>
-      </View>
+      {/* [제거됨] 생년월일 입력 영역 전체 삭제 */}
 
       {/* 화살표 버튼 */}
       <View style={styles.middleArea}>
