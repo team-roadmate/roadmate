@@ -1,19 +1,29 @@
-import { AuthProvider } from "@/contexts/AuthContext";
-import { Drawer } from "expo-router/drawer";
-import React from "react";
-import CustomDrawer from "./CustomDrawer";
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '../src/store/authStore';
 
 export default function RootLayout() {
+  const [isReady, setIsReady] = useState(false);
+  const { checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    const initialize = async () => {
+      await checkAuth();
+      setIsReady(true);
+    };
+    
+    initialize();
+  }, []);
+
+  if (!isReady) {
+    return null; // 또는 로딩 스피너
+  }
+
   return (
-    <AuthProvider>
-      <Drawer
-        screenOptions={{
-          headerShown: false,
-          drawerType: "slide",
-          drawerStyle: { width: 280 },
-        }}
-        drawerContent={(props) => <CustomDrawer {...props} />}
-      />
-    </AuthProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+    </Stack>
   );
 }

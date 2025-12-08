@@ -1,7 +1,14 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { Redirect } from "expo-router";
-import React from "react";
+// app/index.tsx
+import { Redirect } from 'expo-router';
+import { useAuthStore } from '../src/store/authStore';
 
 export default function Index() {
-  return <Redirect href="/RouteGuideScreen" />;
+  const { isAuthenticated } = useAuthStore();
+
+  // 인증 상태에 따라 리다이렉트
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)/home" />;
+  }
+
+  return <Redirect href="/(auth)/login" />;
 }
