@@ -10,7 +10,7 @@ export default function DetailRecord() {
   return (
     <ScrollView style={s.container} showsVerticalScrollIndicator={false}>
       <View style={s.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/record/list")}>
           <Text style={s.backText}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>코스 상세 보기</Text>
