@@ -45,6 +45,7 @@ export default function LoginScreen() {
       await login({ email, password });
       router.replace("/(tabs)/home");
     } catch (err) {
+      // API 오류 메시지(error)가 있다면 그것을 사용하고, 없으면 기본 메시지 사용
       Alert.alert("로그인 실패", error || "로그인에 실패했습니다.");
     }
   };
@@ -81,6 +82,10 @@ export default function LoginScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
           editable={!isLoading}
+          // 💡 자동 완성 활성화 (Android/iOS 모두 권장)
+          autoComplete="email"
+          // iOS를 위한 추가 옵션 (optional, 있지만 유지하면 좋음)
+          textContentType="emailAddress"
         />
 
         {/* 비밀번호 입력 */}
@@ -95,6 +100,10 @@ export default function LoginScreen() {
             setPasswordError(""); // 입력 시 에러 메시지 초기화
           }}
           editable={!isLoading}
+          // 💡 자동 완성 활성화 (Android/iOS 모두 권장)
+          autoComplete="password"
+          // iOS를 위한 추가 옵션 (optional)
+          textContentType="password"
         />
       </View>
 

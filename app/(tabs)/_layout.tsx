@@ -1,11 +1,11 @@
-// app/(tabs)/_layout.tsx
-import { Tabs, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useAuthStore } from "../../src/store/authStore";
 
-export default function TabsLayout() {
-  const router = useRouter();
+export default function RootLayout() {
   const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -14,14 +14,15 @@ export default function TabsLayout() {
   }, [isAuthenticated]);
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "홈",
-          tabBarIcon: () => null, // 아이콘은 나중에 추가
-        }}
-      />
-    </Tabs>
+    <>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="home" />
+        <Stack.Screen name="menu" />
+        <Stack.Screen name="courses" />
+        <Stack.Screen name="achievements" />
+        <Stack.Screen name="settings" />
+      </Stack>
+    </>
   );
 }
