@@ -1,59 +1,80 @@
+import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { styles } from "./css/index.styles";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  View,
 } from "react-native";
-import { Link } from "expo-router";
+import { useAuth } from "../contexts/AuthContext";
+import { styles } from "./css/index.styles";
 
 export default function LoginScreen() {
-  const [id, setId] = useState("");
+  const router = useRouter();
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLoginPress = () => {
-    // TODO: 나중에 여기서 Spring Boot 로그인 API 호출
-    console.log("login try", { id, password });
+  const handleLoginPress = async () => {
+    if (!email || !password) {
+      Alert.alert("경고", "이메일과 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await login(email, password);
+      router.replace("/home");
+    } catch (e: any) {
+      Alert.alert("로그인 실패", e.message || "서버 오류");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* 상단 제목 */}
       <View style={styles.header}>
         <Text style={styles.title}>로그인</Text>
       </View>
 
-      {/* 입력 영역 */}
       <View style={styles.formArea}>
         <TextInput
           style={styles.input}
-          placeholder="아이디"
-          value={id}
-          onChangeText={setId}
+          placeholder="이메일"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
         <TextInput
           style={styles.input}
-          placeholder="비밀 번호"
+          placeholder="비밀번호"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
       </View>
 
-      {/* 가운데 화살표 버튼 */}
       <View style={styles.middleArea}>
-        <TouchableOpacity style={styles.arrowButton} onPress={handleLoginPress}>
-          <Text style={styles.arrowText}>→</Text>
+        <TouchableOpacity
+          style={styles.arrowButton}
+          onPress={handleLoginPress}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.arrowText}>→</Text>
+          )}
         </TouchableOpacity>
       </View>
 
-      {/* 하단 문구 */}
       <View style={styles.bottomArea}>
         <Text style={styles.bottomText}>로그인이 안되시나요?</Text>
-
-        {/* 나중에 /signup 화면 만들면 여기서 그쪽으로 이동 */}
         <Link href="/signup" asChild>
           <TouchableOpacity>
             <Text style={styles.bottomLink}>회원 가입</Text>
