@@ -369,7 +369,68 @@ if (currentIndex === waypoints.length - 1) {
     <View style={styles.container}>
       <RouteGuideHeader crumbs={headerCrumbs} />
 
-      <View style={styles.mapPlaceholder} />
+      <View style={styles.mapPlaceholder}>
+  <MapView
+    style={{ flex: 1 }}
+    initialRegion={{
+      latitude: waypoints[0]?.lat ?? currentLocation.lat,
+      longitude: waypoints[0]?.lng ?? currentLocation.lng,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }}
+    region={{
+      latitude: currentLocation.lat,
+      longitude: currentLocation.lng,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }}
+  >
+    {/* 1) 경로 라인 (PolyLine) */}
+    {waypoints.length > 1 && (
+      <Polyline
+        coordinates={waypoints.map((wp) => ({
+          latitude: wp.lat,
+          longitude: wp.lng,
+        }))}
+        strokeWidth={4}
+      />
+    )}
+
+    {/* 2) 출발 지점 마커 */}
+    {waypoints[0] && (
+      <Marker
+        coordinate={{
+          latitude: waypoints[0].lat,
+          longitude: waypoints[0].lng,
+        }}
+        title="출발 지점"
+        pinColor="green"
+      />
+    )}
+
+    {/* 3) 도착 지점 마커 */}
+    {waypoints[waypoints.length - 1] && (
+      <Marker
+        coordinate={{
+          latitude: waypoints[waypoints.length - 1].lat,
+          longitude: waypoints[waypoints.length - 1].lng,
+        }}
+        title="도착 지점"
+        pinColor="red"
+      />
+    )}
+
+    {/* 4) 현재 위치 마커 */}
+    <Marker
+      coordinate={{
+        latitude: currentLocation.lat,
+        longitude: currentLocation.lng,
+      }}
+      title="현재 위치"
+    />
+  </MapView>
+</View>
+
 
       {nextPoint && (
         <LocationTooltip
