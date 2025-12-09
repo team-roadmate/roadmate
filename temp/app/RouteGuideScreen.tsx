@@ -293,22 +293,32 @@ export default function RouteGuideScreen({
   useEffect(() => {
     if (!nextPoint || !isFinite(distanceToNext)) return;
 
-    // 마지막 waypoint 기준으로 도착 처리
-    if (currentIndex === waypoints.length - 1) {
-      if (distanceToNext <= 20 && !arrivedRef.current) {
-        arrivedRef.current = true;
-        (async () => {
-          await completeWalk();
-          navigation.replace("EndPage", {
-            routeId: startedRouteId,
-            distance: Math.round(
-              expectedDistance || calcTotalDistance(waypoints)
-            ),
-          });
-        })();
-      }
-      return;
-    }
+    // 도착 판정 useEffect 안에서, 마지막 waypoint 이고 20m 이내일 때:
+if (currentIndex === waypoints.length - 1) {
+  if (distanceToNext <= 20 && !arrivedRef.current) {
+    arrivedRef.current = true;
+
+    const now = Date.now();
+    const totalDistance = Math.round(
+      expectedDistance || calcTotalDistance(waypoints)
+    );
+    const totalDurationSec =
+      walkStartTime != null ? Math.round((now - walkStartTime) / 1000) : 0;
+
+    (async () => {
+      await completeWalk(); // 산책 완료 API 호출 (distance/duration 같이 보냄)
+
+      navigation.replace("EndPage", {
+        routeId: startedRouteId,
+        distance: totalDistance,      // m 단위
+        duration: totalDurationSec,   // 초 단위
+        startedAt: walkStartTime,     // timestamp
+        endedAt: now,                 // timestamp
+      });
+    })();
+  }
+  return;
+}
 
     // 다음 포인트로 자동 진행
     if (distanceToNext <= 20) {
