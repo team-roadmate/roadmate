@@ -1,4 +1,4 @@
-// app/(search)/search.tsx  또는 app/record/Search.tsx
+// app/(search)/search.tsx
 
 import React, { useState } from "react";
 import {
@@ -12,10 +12,10 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 
-// ✅ api.ts 위치에 맞게 경로 조정 (프로젝트 루트에 src/services/api.ts 라고 가정)
+// ✅ api.ts 위치(src/services/api.ts)에 맞는 경로
 import { api } from "../../src/services/api";
 
-// ✅ Search.styles.ts 가 이 파일과 같은 폴더에 있다고 가정
+// ✅ Search.styles.ts 가 같은 폴더에 있다고 가정
 import { searchStyles as styles } from "./Search.styles";
 
 const THEMES = ["카페", "공원", "전시회"];
@@ -40,22 +40,23 @@ export default function SearchScreen() {
     });
 
     try {
-      // 실제 API 호출 (권한/토큰 문제로 실패해도 일단 시도만 함)
+      // ✅ API 스펙에 맞게 위도/경도 4개 넘기기 (지금은 하드코딩 목업)
       const res = await api.get("/api/path/shortest", {
         params: {
-          start,
-          end,
-          // 필요하면 distance, time 도 함께 넘길 수 있음
+          startLat: 37.5563,
+          startLon: 126.945,
+          endLat: 37.5547,
+          endLon: 126.9723,
         },
       });
       console.log("최단 경로 응답", res.data);
     } catch (err) {
       console.log("검색 실패(403 예상). 일단 목업으로 진행", err);
-      // 실패해도 지금은 그냥 리스트 화면으로 넘어가게만 사용
     }
 
-    // ✅ 어쨌든 검색 버튼 누르면 결과 리스트 화면으로 이동
-    router.push("/list");
+    // ✅ 어쨌든 리스트 화면으로 이동 (list.tsx 위치가 (search) 그룹 안)
+    router.push("/(search)/list");
+    // 또는 router.push("list"); 도 가능
   };
 
   return (
