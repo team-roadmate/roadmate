@@ -1,26 +1,26 @@
 // screens/RouteGuideScreen.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-import BottomDistanceBar from "../components/Guide/BottomDistanceBar";
-import CurrentLocationButton from "../components/Guide/CurrentLocationButton";
-import DirectionArrow from "../components/Guide/DirectionArrow";
-import EndGuideModal from "../components/Guide/EndGuideModal";
-import LocationTooltip from "../components/Guide/LocationTooltip";
-import RouteGuideHeader from "../components/Guide/RouteGuideHeader";
+import BottomDistanceBar from "../Guide/BottomDistanceBar";
+import CurrentLocationButton from "../Guide/CurrentLocationButton";
+import DirectionArrow from "../Guide/DirectionArrow";
+import EndGuideModal from "../Guide/EndGuideModal";
+import LocationTooltip from "../Guide/LocationTooltip";
+import RouteGuideHeader from "../Guide/RouteGuideHeader";
 
 import useCurrentLocation from "../app/hooks/useCurrentLocation";
 
 
 
-const ROUTE_API_URL = "https://example.com/api/route";
+const ROUTE_API_URL = "";
 
 type Waypoint = {
   name: string;
