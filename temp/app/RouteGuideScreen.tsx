@@ -18,9 +18,7 @@ import RouteGuideHeader from "../Guide/RouteGuideHeader";
 
 import useCurrentLocation from "../app/hooks/useCurrentLocation";
 
-
-
-const ROUTE_API_URL = "";
+const API_BASE_URL = "http://rmate.kro.kr:4080";
 
 type Waypoint = {
   name: string;
@@ -29,7 +27,7 @@ type Waypoint = {
 };
 
 type RouteGuideScreenProps = {
-  route: { params?: { routeId?: number } };
+  route: { params?: { routeId?: number; endLat?: number; endLon?: number } };
   navigation: {
     replace: (name: string, params?: any) => void;
     navigate: (name: string, params?: any) => void;
@@ -40,47 +38,27 @@ export default function RouteGuideScreen({
   route,
   navigation,
 }: RouteGuideScreenProps) {
-  const routeId = route?.params?.routeId ?? 1;
+  const routeIdParam = route?.params?.routeId ?? 1;
+  const endLatParam = route?.params?.endLat;
+  const endLonParam = route?.params?.endLon;
 
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // 백엔드에서 발급한 routeId / 시작 시간 / 예상 거리
+  const [startedRouteId, setStartedRouteId] = useState<number | null>(null);
+  const [walkStartTime, setWalkStartTime] = useState<number | null>(null);
+  const [expectedDistance, setExpectedDistance] = useState<number>(0);
 
   const hookLocation = useCurrentLocation();
   const fallbackLocation = useRef({ lat: 37.13, lng: 127.25 });
-
-  // ✅ 훅 값이 없으면 fallback 사용
   const currentLocation = hookLocation ?? fallbackLocation.current;
 
-  // 1) 경로 불러오기
-  useEffect(() => {
-    let cancelled = false;
+  const arrivedRef = useRef(false);
 
-    async function loadGuideRoute() {
-      try {
-        setLoading(true);
-        const res = await fetch(`${ROUTE_API_URL}/${routeId}`);
-        const data = await res.json();
-
-        if (!cancelled) {
-          setWaypoints(Array.isArray(data.waypoints) ? data.waypoints : []);
-        }
-      } catch (err) {
-        console.warn("경로 불러오기 실패:", err);
-        if (!cancelled) setWaypoints([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    loadGuideRoute();
-    return () => {
-      cancelled = true;
-    };
-  }, [routeId]);
-
-  // 2) 거리 계산
   const getDistanceMeters = (
     lat1: number | null,
     lon1: number | null,
@@ -105,7 +83,6 @@ export default function RouteGuideScreen({
     return R * c;
   };
 
-  // 3) bearing 계산
   const getBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const toRad = (v: number) => (v * Math.PI) / 180;
     const toDeg = (v: number) => (v * 180) / Math.PI;
@@ -127,6 +104,167 @@ export default function RouteGuideScreen({
     if (bearing > 45 && bearing <= 135) return "우회전";
     if (bearing > 225 && bearing <= 315) return "좌회전";
     return "직진";
+  };
+
+  const calcTotalDistance = (points: Waypoint[]) => {
+    if (!points || points.length < 2) return 0;
+    let sum = 0;
+    for (let i = 0; i < points.length - 1; i++) {
+      sum += getDistanceMeters(
+        points[i].lat,
+        points[i].lng,
+        points[i + 1].lat,
+        points[i + 1].lng
+      );
+    }
+    return sum;
+  };
+
+  // 1) 최단 경로 가져오기 (현재 위치 → params 로 받은 목적지)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadShortestPath() {
+      try {
+        // 목적지 좌표가 없으면 에러 처리
+        if (endLatParam == null || endLonParam == null) {
+          setErrorMsg("목적지 정보가 없어 경로를 불러올 수 없습니다.");
+          setWaypoints([]);
+          setLoading(false);
+          return;
+        }
+
+        setLoading(true);
+        setErrorMsg(null);
+
+        const startLat = currentLocation.lat;
+        const startLon = currentLocation.lng;
+        const endLat = endLatParam;
+        const endLon = endLonParam;
+
+        const qs = new URLSearchParams({
+          startLat: String(startLat),
+          startLon: String(startLon),
+          endLat: String(endLat),
+          endLon: String(endLon),
+        }).toString();
+
+        const res = await fetch(
+          `${API_BASE_URL}/api/path/shortest?${qs}`
+        );
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        const path: { latitude: number; longitude: number }[] = data.path ?? [];
+
+        const converted: Waypoint[] = path.map((p, idx) => ({
+          name:
+            idx === 0
+              ? "출발 지점"
+              : idx === path.length - 1
+              ? "도착 지점"
+              : `경유지 ${idx}`,
+          lat: p.latitude,
+          lng: p.longitude,
+        }));
+
+        setWaypoints(converted);
+
+        const total = data.totalDistance ?? calcTotalDistance(converted);
+        setExpectedDistance(total);
+      } catch (err) {
+        console.warn("최단 경로 불러오기 실패:", err);
+        if (!cancelled) {
+          setErrorMsg("경로를 불러오는 중 오류가 발생했습니다.");
+          setWaypoints([]);
+          setExpectedDistance(0);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadShortestPath();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeIdParam, currentLocation.lat, currentLocation.lng, endLatParam, endLonParam]);
+
+  // 2) 경로 준비 후 한 번만 산책 시작 API 호출 (POST /api/routes/start)
+  useEffect(() => {
+    if (loading) return;
+    if (!waypoints || waypoints.length === 0) return;
+    if (startedRouteId !== null) return;
+
+    async function startWalk() {
+      try {
+        const distance = expectedDistance || calcTotalDistance(waypoints);
+        const walkingSpeed = 1.4; // m/s (약 5km/h)
+        const expectedDurationSec = Math.round(distance / walkingSpeed);
+
+        const body = {
+          expectedDistance: Math.round(distance),
+          expectedDuration: expectedDurationSec,
+          pathData: JSON.stringify(waypoints),
+        };
+
+        const res = await fetch(`${API_BASE_URL}/api/routes/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        const json = await res.json();
+
+        if (json && json.success) {
+          // data 에 routeId 가 들어있다고 가정
+          setStartedRouteId(json.data);
+          setWalkStartTime(Date.now());
+        } else {
+          console.warn("산책 시작 실패 응답:", json);
+        }
+      } catch (err) {
+        console.warn("산책 시작 API 호출 실패:", err);
+      }
+    }
+
+    startWalk();
+  }, [loading, waypoints, expectedDistance, startedRouteId]);
+
+  // 3) 실제 완료 API (목적지 도착 시에만 사용)
+  const completeWalk = async () => {
+    if (startedRouteId == null || walkStartTime == null) return;
+
+    const now = Date.now();
+    const durationSec = Math.round((now - walkStartTime) / 1000);
+    const distanceMeters = Math.round(
+      expectedDistance || calcTotalDistance(waypoints)
+    );
+
+    try {
+      const body = {
+        distance: distanceMeters,
+        duration: durationSec,
+      };
+
+      const res = await fetch(
+        `${API_BASE_URL}/api/routes/${startedRouteId}/complete`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const json = await res.json();
+      if (!json?.success) {
+        console.warn("산책 완료 응답 에러:", json);
+      }
+    } catch (err) {
+      console.warn("산책 완료 API 호출 실패:", err);
+    }
   };
 
   const nextPoint = waypoints?.[currentIndex] ?? null;
@@ -151,25 +289,41 @@ export default function RouteGuideScreen({
 
   const directionText = convertBearingToText(bearingToNext);
 
-  // 5) waypoint 자동 갱신 & 완주 처리
+  // 4) waypoint 자동 진행 & 최종 도착 시 complete + EndPage 이동
   useEffect(() => {
     if (!nextPoint || !isFinite(distanceToNext)) return;
 
+    // 마지막 waypoint 기준으로 도착 처리
     if (currentIndex === waypoints.length - 1) {
-      if (distanceToNext <= 20) {
-        // 완주 화면으로 넘어가기
-        navigation.replace("CompleteCourseScreen", {
-          finishedAt: Date.now(),
-          finishedIndex: currentIndex,
-        });
+      if (distanceToNext <= 20 && !arrivedRef.current) {
+        arrivedRef.current = true;
+        (async () => {
+          await completeWalk();
+          navigation.replace("EndPage", {
+            routeId: startedRouteId,
+            distance: Math.round(
+              expectedDistance || calcTotalDistance(waypoints)
+            ),
+          });
+        })();
       }
       return;
     }
 
+    // 다음 포인트로 자동 진행
     if (distanceToNext <= 20) {
       setCurrentIndex((idx) => Math.min(idx + 1, waypoints.length - 1));
     }
-  }, [distanceToNext, currentIndex, nextPoint, waypoints.length, navigation]);
+  }, [
+    distanceToNext,
+    currentIndex,
+    nextPoint,
+    waypoints.length,
+    navigation,
+    startedRouteId,
+    expectedDistance,
+    waypoints,
+  ]);
 
   const headerCrumbs = waypoints.map((wp, idx) => {
     if (idx < currentIndex) return `✔ ${wp.name}`;
@@ -181,6 +335,14 @@ export default function RouteGuideScreen({
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={styles.loading}>
+        <Text>{errorMsg}</Text>
       </View>
     );
   }
@@ -229,6 +391,7 @@ export default function RouteGuideScreen({
         </TouchableOpacity>
       </View>
 
+      {/* 여기서 "종료"는 중간 종료: complete 호출 X, 바로 Home으로 */}
       <Modal transparent visible={showEndModal} animationType="fade">
         <EndGuideModal
           onCancel={() => setShowEndModal(false)}
