@@ -1,17 +1,19 @@
-// app/Search.tsx
-import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
-import { useRouter } from "expo-router";
+// app/record/Search.tsx  (혹은 네가 쓰는 위치에 맞게 파일명 유지)
 import React, { useState } from "react";
-import { Alert } from "react-native";
-import { PathfindingService } from "@/services/pathfinding.service";
 import {
-  ScrollView,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  ScrollView,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
+
+// 경로는 프로젝트 구조에 맞게 조정해줘.
+// api.ts 가 src/services/api.ts 에 있다면:
+import { api } from "../../src/services/api";
 
 import { searchStyles as styles } from "./Search.styles";
 
@@ -26,37 +28,39 @@ export default function SearchScreen() {
   const [distance, setDistance] = useState<number>(5); // 0~10 km
   const [time, setTime] = useState<number>(0.5); // 0~1 h
 
-const handleSearch = async () => {
-  try {
-    const payload = {
-      startLat: 37.5665,  // 서울 시청 근처
-      startLng: 126.9780,
-      endLat: 37.5796,    // 경복궁 근처
-      endLng: 126.9770,
-    };
+  // 🔍 검색 버튼 눌렀을 때
+  const handleSearch = async () => {
+    try {
+      console.log("검색 조건", {
+        start,
+        end,
+        theme: activeTheme,
+        distance,
+        time,
+      });
 
-    console.log("최단 경로 요청 payload:", payload);
+      // 임시로 고정 좌표 사용 (나중에 실제 값으로 교체)
+      const res = await api.get("/api/path/shortest", {
+        params: {
+          startLat: 37.5665,
+          startLng: 126.978,
+          endLat: 37.5665,
+          endLng: 126.978,
+        },
+      });
 
-    const result = await PathfindingService.searchShortest(payload);
+      console.log("검색 결과:", res.data);
 
-    console.log("최단 경로 결과:", result);
-
-    router.push({
-      pathname: "/record/list",
-      params: {
-        shortestResult: JSON.stringify(result),
-      },
-    });
-  } catch (e: any) {
-    console.error(e);
-    Alert.alert("검색 실패", e?.message ?? "최단 경로 검색에 실패했습니다.");
-  }
-};
-
-    // 🔥 검색 버튼 누르면 list.tsx로 이동
-    router.push("/list");
+      // 결과 페이지로 이동 (임시로 list 화면)
+      router.push("/record/list");
+    } catch (error) {
+      console.error("검색 실패:", error);
+      // 에러여도 일단 목록으로 이동 (팀원이 말한 '임시 목업' 느낌)
+      router.push("/record/list");
+    }
   };
 
+  // ✅ 여기부터는 반드시 SearchScreen 함수 안!
   return (
     <ScrollView
       style={styles.container}
@@ -65,7 +69,7 @@ const handleSearch = async () => {
     >
       {/* 상단 헤더 */}
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.push("/(tabs)/home")}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color="#001A72" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>코스 상세 검색</Text>
@@ -107,7 +111,10 @@ const handleSearch = async () => {
                 onPress={() => setActiveTheme(theme)}
               >
                 <Text
-                  style={[styles.chipText, isActive && styles.chipTextActive]}
+                  style={[
+                    styles.chipText,
+                    isActive && styles.chipTextActive,
+                  ]}
                 >
                   #{theme}
                 </Text>
@@ -138,7 +145,9 @@ const handleSearch = async () => {
         />
         <View style={styles.sliderLabelRow}>
           <Text style={styles.sliderSideText}>0km</Text>
-          <Text style={styles.sliderCenterText}>{distance.toFixed(1)}km</Text>
+          <Text style={styles.sliderCenterText}>
+            {distance.toFixed(1)}km
+          </Text>
           <Text style={styles.sliderSideText}>10km</Text>
         </View>
       </View>
@@ -159,14 +168,19 @@ const handleSearch = async () => {
         />
         <View style={styles.sliderLabelRow}>
           <Text style={styles.sliderSideText}>0h</Text>
-          <Text style={styles.sliderCenterText}>{time.toFixed(1)}h</Text>
+          <Text style={styles.sliderCenterText}>
+            {time.toFixed(1)}h
+          </Text>
           <Text style={styles.sliderSideText}>1h</Text>
         </View>
       </View>
 
       {/* 검색 버튼 */}
       <View style={styles.buttonWrapper}>
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={handleSearch}
+        >
           <Text style={styles.searchButtonText}>검색</Text>
         </TouchableOpacity>
       </View>
