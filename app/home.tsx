@@ -1,37 +1,51 @@
 import DashboardList from "@/components/Dashboard/DashboardList";
+import { useAuth } from "@/contexts/AuthContext";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
 export default function Home() {
+  const navigation = useNavigation();
+  const router = useRouter(); // 🔥 router 추가
+  const { logout } = useAuth();
+
   return (
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentContainer}
     >
+      {/* 검색창 + Drawer 메뉴 */}
       <View style={styles.searchBox}>
-        <Ionicons name="search" size={26} color="#001A72" />
-        <TextInput
-          placeholder="검색어를 입력해주세요"
-          style={styles.searchInput}
-          placeholderTextColor="#001A72"
+        <TouchableOpacity
+          style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+          activeOpacity={0.8}
+          onPress={() => router.push("/record/Search")} // 🔥 검색창 터치 시 이동
+        >
+          <Ionicons name="search" size={26} color="#001A72" />
+          <Text style={styles.searchInput}>검색어를 입력해주세요</Text>
+        </TouchableOpacity>
+
+        <Feather
+          name="menu"
+          size={30}
+          color="#001A72"
+          onPress={() => navigation.openDrawer()}
         />
-        <Feather name="menu" size={30} color="#001A72" />
       </View>
 
       <DashboardList />
 
       <Text style={styles.sectionTitle}>테마별 추천 코스</Text>
-
       <View style={styles.tabRow}>
         <TouchableOpacity style={styles.tabBtn}>
           <Text style={styles.tabText}>공원</Text>
@@ -68,8 +82,8 @@ export default function Home() {
 
       <View style={styles.recommendHeader}>
         <Text style={styles.sectionTitle}>추천 경로</Text>
-        <TouchableOpacity>
-          <Text style={styles.moreText}>더보기</Text>
+        <TouchableOpacity onPress={logout}>
+          <Text style={styles.moreText}>로그아웃</Text>
         </TouchableOpacity>
       </View>
 
@@ -94,6 +108,7 @@ export default function Home() {
   );
 }
 
+// 기존 styles 그대로 사용
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -101,17 +116,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  contentContainer: {
-    paddingBottom: 20,
-  },
-
+  contentContainer: { paddingBottom: 20 },
   searchBox: {
     width: "100%",
     backgroundColor: "#F2F5FF",
     borderRadius: 12,
     minHeight: 50,
-    alignItems: "center",
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
   },
@@ -120,26 +132,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     fontSize: 17,
     color: "#001A72",
+    opacity: 0.7,
   },
-  tag: {
-    backgroundColor: "rgba(255,255,255,0.3)",
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    fontSize: 14,
-  },
-
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
     marginTop: 25,
     color: "#001A72",
   },
-
-  tabRow: {
-    flexDirection: "row",
-    marginTop: 10,
-    gap: 8,
-  },
+  tabRow: { flexDirection: "row", marginTop: 10, gap: 8 },
   tabBtn: {
     padding: 10,
     borderWidth: 1,
@@ -149,11 +150,7 @@ const styles = StyleSheet.create({
   tabText: { color: "#001A72", fontSize: 15 },
   tabActive: { backgroundColor: "#001A72" },
   tabActiveText: { color: "white" },
-
-  courseScrollContainer: {
-    paddingVertical: 10,
-    gap: 15,
-  },
+  courseScrollContainer: { paddingVertical: 10, gap: 15 },
   courseCard: {
     width: 150,
     backgroundColor: "#eee",
@@ -180,14 +177,12 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   metaText: { color: "#777", fontSize: 10 },
-
   recommendHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   moreText: { color: "#97D800", fontSize: 17, fontWeight: "600" },
-
   routeItem: {
     backgroundColor: "#F0F0F0",
     borderRadius: 12,
