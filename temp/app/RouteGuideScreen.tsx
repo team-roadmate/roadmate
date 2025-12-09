@@ -308,7 +308,7 @@ if (currentIndex === waypoints.length - 1) {
     (async () => {
       await completeWalk(); // 산책 완료 API 호출 (distance/duration 같이 보냄)
 
-      navigation.replace("EndPage", {
+      navigation.replace("RouteGuideScreen", {
         routeId: startedRouteId,
         distance: totalDistance,      // m 단위
         duration: totalDurationSec,   // 초 단위

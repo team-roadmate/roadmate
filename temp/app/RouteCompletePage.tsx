@@ -1,189 +1,309 @@
-import { useRouter } from "expo-router"; // expo-router에서 제공하는 useRouter 훅
-import React, { useState } from "react";
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+// screens/RouteCompletePage.tsx
+import React, { useMemo, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const RouteCompletePage = () => {
-  // expo-router에서 제공하는 router 객체 사용
-  const router = useRouter();
+const API_BASE_URL = "http://rmate.kro.kr:4080";
 
-  // 경로 안내에서 받은 데이터 (예시값 사용)
-  const totalDistance = 5; // 예시 거리 값
-  const totalTime = 1; // 예시 시간 값
-  const calories = 300; // 예시 칼로리 값
-  const courseName = "OO카페 코스"; // 예시 코스 이름
+type RouteCompletePageProps = {
+  route: {
+    params?: {
+      routeId?: number | null;
+      distance?: number;   // m 단위
+      duration?: number;   // 초 단위
+      startedAt?: number | null;
+      endedAt?: number | null;
+    };
+  };
+  navigation: {
+    navigate: (name: string, params?: any) => void;
+    replace: (name: string, params?: any) => void;
+  };
+};
 
-  // 코스 제목, 리뷰 상태
-  const [courseTitle, setCourseTitle] = useState("");
-  const [courseReview, setCourseReview] = useState("");
+export default function RouteCompletePage({
+  route,
+  navigation,
+}: RouteCompletePageProps) {
+  const routeId = route.params?.routeId ?? null;
+  const distanceM = route.params?.distance ?? 0;
+  const durationSec = route.params?.duration ?? 0;
+  const startedAt = route.params?.startedAt ?? null;
+  const endedAt = route.params?.endedAt ?? null;
 
-  // 모달 상태
-  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [title, setTitle] = useState("");
+  const [review, setReview] = useState("");
+  const [rating, setRating] = useState(5); // 1~5점 고정 예시
 
-  // "저장하기" 버튼 클릭 시 모달 띄우기
-  const handleSaveClick = () => {
-    setShowSaveModal(true);
+  const { distanceKmText, durationHourText, calorieText, timeRangeText } =
+    useMemo(() => {
+      const km = distanceM / 1000;
+      const distanceKmText = `${km.toFixed(1)}km`;
+
+      const hour = durationSec / 3600;
+      const durationHourText = `${hour.toFixed(1)}h`;
+
+      const kcal = km * 80; // 단순 계산
+      const calorieText = `${Math.round(kcal)}kcal`;
+
+      let timeRangeText = "-";
+      if (startedAt && endedAt) {
+        const startDate = new Date(startedAt);
+        const endDate = new Date(endedAt);
+
+        const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+
+        const datePart = `${startDate.getFullYear()}.${pad(
+          startDate.getMonth() + 1
+        )}.${pad(startDate.getDate())}`;
+
+        const startTime = `${pad(startDate.getHours())}:${pad(
+          startDate.getMinutes()
+        )}`;
+        const endTime = `${pad(endDate.getHours())}:${pad(
+          endDate.getMinutes()
+        )}`;
+
+        timeRangeText = `${datePart} ${startTime} ~ ${endTime}`;
+      }
+
+      return { distanceKmText, durationHourText, calorieText, timeRangeText };
+    }, [distanceM, durationSec, startedAt, endedAt]);
+
+  const handleSave = async () => {
+    if (!routeId) {
+      Alert.alert("알림", "routeId 정보가 없어 저장할 수 없습니다.");
+      return;
+    }
+
+    if (!title.trim() || !review.trim()) {
+      Alert.alert("알림", "제목과 코스 리뷰를 입력해 주세요.");
+      return;
+    }
+
+    try {
+      const body = {
+        title: title.trim(),
+        memo: review.trim(),
+        rating,
+      };
+
+      const res = await fetch(
+        `${API_BASE_URL}/api/routes/${routeId}/set-course`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const json = await res.json();
+
+      if (json?.success) {
+        Alert.alert("완료", "코스가 저장되었습니다.", [
+          {
+            text: "확인",
+            onPress: () => navigation.replace("Home"),
+          },
+        ]);
+      } else {
+        console.warn("코스 저장 실패 응답:", json);
+        Alert.alert("오류", "코스를 저장하는 중 문제가 발생했습니다.");
+      }
+    } catch (err) {
+      console.warn("코스 저장 API 오류:", err);
+      Alert.alert("오류", "서버 통신 중 오류가 발생했습니다.");
+    }
   };
 
-  // "저장 안 함" 버튼 클릭 시 홈 화면으로 이동
-  const handleCancelClick = () => {
-    router.push("/"); // 홈 화면으로 이동
-  };
-
-  // "확인" 클릭 시 저장 처리
-  const handleConfirmSave = () => {
-    // 실제 저장 로직 처리 (예: 서버로 데이터 전송)
-    console.log("저장된 데이터:", { courseTitle, courseReview });
-
-    setShowSaveModal(false);
-    router.push("/"); // 홈 화면으로 돌아가기
-  };
-
-  // "취소" 클릭 시 모달 닫기
-  const handleCancelSave = () => {
-    setShowSaveModal(false);
+  const handleSkip = () => {
+    navigation.replace("Home");
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>코스 완료를 축하합니다!</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>코스 완주를 축하합니다!</Text>
 
-      {/* 이미지 업로드 */}
-      <View style={styles.imageContainer}>
-        <Text>사진 업로드 (선택)</Text>
+      <View style={styles.imageBox}>
+        <Text style={styles.imageText}>이미지</Text>
       </View>
 
-      {/* 경로 정보 */}
-      <Text style={styles.infoText}>2025.10.10. 15:00 ~ 16:00</Text>
-      <Text style={styles.infoText}>총 거리: {totalDistance} km</Text>
-      <Text style={styles.infoText}>소요 시간: {totalTime} 시간</Text>
-      <Text style={styles.infoText}>칼로리 소모량: {calories} kcal</Text>
-
-      {/* 코스 기록 제목 */}
-      <TextInput
-        style={styles.input}
-        placeholder="코스 기록 제목을 입력해 주세요"
-        value={courseTitle}
-        onChangeText={setCourseTitle}
-      />
-
-      {/* 코스 리뷰 */}
-      <TextInput
-        style={styles.input}
-        placeholder="코스 리뷰를 입력해 주세요"
-        value={courseReview}
-        onChangeText={setCourseReview}
-        multiline
-      />
-
-      {/* 버튼들 */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleSaveClick}>
-          <Text style={styles.buttonText}>저장하기</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonCancel} onPress={handleCancelClick}>
-          <Text style={styles.buttonText}>저장 안 함</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 저장 확인 모달 */}
-      <Modal transparent visible={showSaveModal} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text>저장하시겠습니까?</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleCancelSave}>
-                <Text>취소</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton} onPress={handleConfirmSave}>
-                <Text>확인</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>사진 업로드 (선택)</Text>
+        <View style={styles.uploadBox}>
+          <Text style={styles.uploadText}>사진 업로드 버튼 자리 (추후 구현)</Text>
         </View>
-      </Modal>
-    </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.timeText}>{timeRangeText}</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.infoLabel}>총 거리</Text>
+          <Text style={styles.infoValue}>{distanceKmText}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.infoLabel}>소요 시간</Text>
+          <Text style={styles.infoValue}>{durationHourText}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.infoLabel}>칼로리 소모량</Text>
+          <Text style={styles.infoValue}>{calorieText}</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>코스 기록 제목</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="텍스트를 입력해 주세요."
+          value={title}
+          onChangeText={setTitle}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>코스 리뷰 · 코스 리뷰</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="텍스트를 입력해 주세요."
+          value={review}
+          onChangeText={setReview}
+          multiline
+        />
+      </View>
+
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[styles.button, styles.primaryButton]}
+          onPress={handleSave}
+        >
+          <Text style={styles.buttonTextPrimary}>저장하기</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.secondaryButton]}
+          onPress={handleSkip}
+        >
+          <Text style={styles.buttonTextSecondary}>저장 안 함</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    flex: 1,
-    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
+    backgroundColor: "#ffffff",
   },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+  title: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#12306B",
+    marginBottom: 16,
   },
-  imageContainer: {
-    height: 150,
-    backgroundColor: "#e0e0e0",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-    borderRadius: 10,
-  },
-  infoText: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  input: {
-    height: 40,
-    paddingLeft: 10,
+  imageBox: {
+    width: "100%",
+    height: 180,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  button: {
-    backgroundColor: "#1A237E",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 10,
-    alignItems: "center",
-  },
-  buttonCancel: {
-    backgroundColor: "#7AA800",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    marginBottom: 12,
   },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
+  imageText: {
+    color: "#999",
   },
-  modalButtons: {
+  section: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  uploadBox: {
+    height: 40,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  uploadText: {
+    fontSize: 12,
+    color: "#999",
+  },
+  timeText: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 8,
+  },
+  row: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 20,
+    justifyContent: "space-between",
+    marginBottom: 4,
   },
-  modalButton: {
-    backgroundColor: "#1A237E",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
+  infoLabel: {
+    fontSize: 13,
+    color: "#444",
+  },
+  infoValue: {
+    fontSize: 13,
+    color: "#12306B",
+    fontWeight: "600",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: "top",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  button: {
     flex: 1,
-    marginHorizontal: 5,
+    height: 44,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  primaryButton: {
+    backgroundColor: "#12306B",
+    marginRight: 8,
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: "#12306B",
+    marginLeft: 8,
+  },
+  buttonTextPrimary: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  buttonTextSecondary: {
+    color: "#12306B",
+    fontWeight: "600",
   },
 });
-
-export default RouteCompletePage;
