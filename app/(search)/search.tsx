@@ -3,6 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { Alert } from "react-native";
+import { PathfindingService } from "@/services/pathfinding.service";
 import {
   ScrollView,
   Text,
@@ -24,14 +26,32 @@ export default function SearchScreen() {
   const [distance, setDistance] = useState<number>(5); // 0~10 km
   const [time, setTime] = useState<number>(0.5); // 0~1 h
 
-  const handleSearch = () => {
-    console.log("검색 조건", {
-      start,
-      end,
-      theme: activeTheme,
-      distance,
-      time,
+const handleSearch = async () => {
+  try {
+    const payload = {
+      startLat: 37.5665,  // 서울 시청 근처
+      startLng: 126.9780,
+      endLat: 37.5796,    // 경복궁 근처
+      endLng: 126.9770,
+    };
+
+    console.log("최단 경로 요청 payload:", payload);
+
+    const result = await PathfindingService.searchShortest(payload);
+
+    console.log("최단 경로 결과:", result);
+
+    router.push({
+      pathname: "/record/list",
+      params: {
+        shortestResult: JSON.stringify(result),
+      },
     });
+  } catch (e: any) {
+    console.error(e);
+    Alert.alert("검색 실패", e?.message ?? "최단 경로 검색에 실패했습니다.");
+  }
+};
 
     // 🔥 검색 버튼 누르면 list.tsx로 이동
     router.push("/list");
