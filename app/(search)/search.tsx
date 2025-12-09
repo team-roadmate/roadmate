@@ -1,4 +1,5 @@
-// app/record/Search.tsx  (혹은 네가 쓰는 위치에 맞게 파일명 유지)
+// app/(search)/search.tsx  또는 app/record/Search.tsx
+
 import React, { useState } from "react";
 import {
   View,
@@ -11,10 +12,10 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 
-// 경로는 프로젝트 구조에 맞게 조정해줘.
-// api.ts 가 src/services/api.ts 에 있다면:
+// ✅ api.ts 위치에 맞게 경로 조정 (프로젝트 루트에 src/services/api.ts 라고 가정)
 import { api } from "../../src/services/api";
 
+// ✅ Search.styles.ts 가 이 파일과 같은 폴더에 있다고 가정
 import { searchStyles as styles } from "./Search.styles";
 
 const THEMES = ["카페", "공원", "전시회"];
@@ -30,37 +31,33 @@ export default function SearchScreen() {
 
   // 🔍 검색 버튼 눌렀을 때
   const handleSearch = async () => {
-    try {
-      console.log("검색 조건", {
-        start,
-        end,
-        theme: activeTheme,
-        distance,
-        time,
-      });
+    console.log("검색 조건", {
+      start,
+      end,
+      theme: activeTheme,
+      distance,
+      time,
+    });
 
-      // 임시로 고정 좌표 사용 (나중에 실제 값으로 교체)
+    try {
+      // 실제 API 호출 (권한/토큰 문제로 실패해도 일단 시도만 함)
       const res = await api.get("/api/path/shortest", {
         params: {
-          startLat: 37.5665,
-          startLng: 126.978,
-          endLat: 37.5665,
-          endLng: 126.978,
+          start,
+          end,
+          // 필요하면 distance, time 도 함께 넘길 수 있음
         },
       });
-
-      console.log("검색 결과:", res.data);
-
-      // 결과 페이지로 이동 (임시로 list 화면)
-      router.push("/record/list");
-    } catch (error) {
-      console.error("검색 실패:", error);
-      // 에러여도 일단 목록으로 이동 (팀원이 말한 '임시 목업' 느낌)
-      router.push("/record/list");
+      console.log("최단 경로 응답", res.data);
+    } catch (err) {
+      console.log("검색 실패(403 예상). 일단 목업으로 진행", err);
+      // 실패해도 지금은 그냥 리스트 화면으로 넘어가게만 사용
     }
+
+    // ✅ 어쨌든 검색 버튼 누르면 결과 리스트 화면으로 이동
+    router.push("/record/list");
   };
 
-  // ✅ 여기부터는 반드시 SearchScreen 함수 안!
   return (
     <ScrollView
       style={styles.container}
