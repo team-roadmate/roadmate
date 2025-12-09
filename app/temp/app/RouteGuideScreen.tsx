@@ -1,4 +1,5 @@
-// screens/RouteGuideScreen.tsx
+// app/temp/RouteGuideScreen.tsx
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -8,7 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import MapView, { Marker, Polyline } from "react-native-maps";
 
 import EndGuideModal from "../Guide/EndGuideModal";
@@ -24,12 +24,10 @@ type Waypoint = {
   lng: number;
 };
 
-type RouteGuideScreenProps = {
-  route: { params?: { routeId?: number; endLat?: number; endLon?: number } };
-  navigation: {
-    replace: (name: string, params?: any) => void;
-    navigate: (name: string, params?: any) => void;
-  };
+type RouteParams = {
+  routeId?: string;
+  endLat?: string;
+  endLon?: string;
 };
 
 // ─────────────────────────
@@ -90,14 +88,17 @@ function BottomDistanceBar({ distance, direction }: BottomDistanceBarProps) {
 }
 
 // ─────────────────────────
-// 메인 화면 컴포넌트
+// 메인 화면 컴포넌트 (expo-router 방식)
 // ─────────────────────────
 
-export default function RouteGuideScreen({
-  route,
-  navigation,
-}: RouteGuideScreenProps) {
-  const routeIdParam = route?.params?.routeId ?? null;
+export default function RouteGuideScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<RouteParams>();
+
+  const routeIdParam = params.routeId ? Number(params.routeId) : null;
+  const endLatParam = params.endLat ? Number(params.endLat) : null;
+  const endLonParam = params.endLon ? Number(params.endLon) : null;
+  // 지금은 endLat/endLon 안 쓰고 목업 경로 사용 중
 
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +112,7 @@ export default function RouteGuideScreen({
   const [walkStartTime, setWalkStartTime] = useState<number | null>(null);
   const arrivedRef = useRef(false);
 
-  // 👉 지도에 접근하기 위한 ref (현위치 버튼에서 사용)
+  // 지도 ref (현위치 버튼용)
   const mapRef = useRef<MapView | null>(null);
 
   // ───────── 유틸 함수들 ─────────
@@ -139,34 +140,6 @@ export default function RouteGuideScreen({
     return R * c;
   };
 
-  const getBearing = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ) => {
-    const toRad = (v: number) => (v * Math.PI) / 180;
-    const toDeg = (v: number) => (v * 180) / Math.PI;
-
-    const φ1 = toRad(lat1);
-    const φ2 = toRad(lat2);
-    const λ1 = toRad(lon1);
-    const λ2 = toRad(lon2);
-
-    const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
-    const x =
-      Math.cos(φ1) * Math.sin(φ2) -
-      Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
-
-    return (toDeg(Math.atan2(y, x)) + 360) % 360;
-  };
-
-  const convertBearingToText = (bearing: number) => {
-    if (bearing > 45 && bearing <= 135) return "우회전";
-    if (bearing > 225 && bearing <= 315) return "좌회전";
-    return "직진";
-  };
-
   const calcTotalDistance = (points: Waypoint[]) => {
     if (!points || points.length < 2) return 0;
     let sum = 0;
@@ -179,6 +152,14 @@ export default function RouteGuideScreen({
       );
     }
     return sum;
+  };
+
+  // 간단한 방향 텍스트 (나중에 개선 가능)
+  const getDirectionText = () => {
+    if (currentIndex === 0) return "직진";
+    if (currentIndex === waypoints.length - 1) return "직진";
+    // 목업이라 대충 번갈아가며 좌/우 줘도 됨
+    return currentIndex % 2 === 0 ? "좌회전" : "우회전";
   };
 
   // ───────── 1) 목업 경로 생성 ─────────
@@ -198,7 +179,7 @@ export default function RouteGuideScreen({
     setLoading(false);
   }, [currentLocation.lat, currentLocation.lng]);
 
-  // 현재 목표 지점/거리/방향
+  // 현재 목표 지점/거리
   const nextPoint = waypoints?.[currentIndex] ?? null;
 
   const distanceToNext = nextPoint
@@ -210,16 +191,7 @@ export default function RouteGuideScreen({
       )
     : Infinity;
 
-  const bearingToNext = nextPoint
-    ? getBearing(
-        currentLocation.lat,
-        currentLocation.lng,
-        nextPoint.lat,
-        nextPoint.lng
-      )
-    : 0;
-
-  const directionText = convertBearingToText(bearingToNext);
+  const directionText = getDirectionText();
 
   // ───────── 2) waypoint 자동 진행 & 도착 처리 ─────────
   useEffect(() => {
@@ -235,13 +207,19 @@ export default function RouteGuideScreen({
         const totalDurationSec =
           walkStartTime != null ? Math.round((now - walkStartTime) / 1000) : 0;
 
-        navigation.replace("RouteCompletePage", {
-          routeId: null,
-          distance: totalDistance,
-          duration: totalDurationSec,
-          startedAt: walkStartTime,
-          endedAt: now,
+        // 👉 완료 페이지로 교체 이동 (expo-router)
+        router.replace({
+          pathname: "../temp/RouteCompletePage",
+          params: {
+            routeId: "", // 목업이라 일단 빈값
+            distance: String(totalDistance),
+            duration: String(totalDurationSec),
+            startedAt: walkStartTime ? String(walkStartTime) : "",
+            endedAt: String(now),
+          },
         });
+
+        return;
       }
       return;
     }
@@ -250,7 +228,7 @@ export default function RouteGuideScreen({
     if (distanceToNext <= 20) {
       setCurrentIndex((idx) => Math.min(idx + 1, waypoints.length - 1));
     }
-  }, [distanceToNext, currentIndex, nextPoint, waypoints, navigation, walkStartTime]);
+  }, [distanceToNext, currentIndex, nextPoint, waypoints, walkStartTime, router]);
 
   // 헤더 crumb 텍스트
   const headerCrumbs = waypoints.map((wp, idx) => {
@@ -259,7 +237,7 @@ export default function RouteGuideScreen({
     return wp.name;
   });
 
-  // ───────── 로딩/에러 처리 ─────────
+  // ───────── 로딩 ─────────
   if (loading) {
     return (
       <View style={styles.loading}>
@@ -346,8 +324,7 @@ export default function RouteGuideScreen({
           />
         </MapView>
 
-        {/* 🔹 상단 경유지 박스는 제거함 */}
-
+        {/* 가운데 화살표 */}
         <View style={styles.arrowWrapper}>
           <DirectionArrow
             direction={
@@ -360,6 +337,7 @@ export default function RouteGuideScreen({
           />
         </View>
 
+        {/* 현위치 버튼 */}
         <View style={styles.currentBtnWrapper}>
           <CurrentLocationButton onPress={handleRecenter} />
         </View>
@@ -384,7 +362,8 @@ export default function RouteGuideScreen({
           onCancel={() => setShowEndModal(false)}
           onEnd={() => {
             setShowEndModal(false);
-            navigation.navigate("Home");
+            // 👉 expo-router로 탭 홈으로 이동
+            router.replace("/(tabs)/home");
           }}
         />
       </Modal>
@@ -411,17 +390,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#ddd",
   },
   arrowWrapper: {
-  position: "absolute",
-  bottom: 50, // ⬅ 기존보다 위쪽으로 이동
-  alignSelf: "center",
-},
-
-currentBtnWrapper: {
-  position: "absolute",
-  right: 16,
-  bottom: 20, // ⬅ 동일하게 조절
-},
-
+    position: "absolute",
+    bottom: 50, // 🔽 더 아래로
+    alignSelf: "center",
+  },
+  currentBtnWrapper: {
+    position: "absolute",
+    right: 16,
+    bottom: 20, // 🔽 더 아래로
+  },
   endButton: {
     paddingHorizontal: 20,
     paddingBottom: 20,
