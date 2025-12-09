@@ -1,4 +1,4 @@
-// app/record/list.tsx
+// app/(search)/list.tsx
 import RecordList, { RecordItem } from "@/src/components/RecordList";
 
 const searchRecords: RecordItem[] = [
@@ -28,9 +28,9 @@ export default function SearchRecordScreen() {
   return (
     <RecordList
       screenTitle="추천 경로 리스트"
-      backTo="/Search"
+      backTo="/search"        // 🔹 여기만 수정!
       sortOption="거리순"
-      showReviewBtn={false} // 단일 버튼 + 가운데 정렬
+      showReviewBtn={false}   // 단일 버튼 + 가운데 정렬
       items={searchRecords}
     />
   );
