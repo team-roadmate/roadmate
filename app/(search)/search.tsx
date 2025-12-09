@@ -55,7 +55,7 @@ export default function SearchScreen() {
     }
 
     // ✅ 어쨌든 검색 버튼 누르면 결과 리스트 화면으로 이동
-    router.push("/record/list");
+    router.push("/list");
   };
 
   return (
