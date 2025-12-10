@@ -4,6 +4,7 @@ import RecordList, { RecordItem } from "@/src/components/RecordList";
 import { api } from "../../src/services/api";
 
 // ✅ API 실패 시 사용할 목업 데이터
+/*
 const mockSavedItems: RecordItem[] = [
   {
     id: "1",
@@ -25,7 +26,7 @@ const mockSavedItems: RecordItem[] = [
     rating: 4.8,
     likes: 98,
   },
-];
+];*/
 
 // ✅ 백엔드 응답 → RecordItem 으로 변환
 const mapCourseToRecordItem = (course: any): RecordItem => {

@@ -16,6 +16,7 @@ type DetailData = {
 };
 
 // ✅ 기본 목업 상세 데이터
+/*
 const mockDetail: DetailData = {
   id: "1",
   title: "한강 공원 힐링 코스",
@@ -25,6 +26,7 @@ const mockDetail: DetailData = {
   tags: ["# 풍경이 좋아요", "# 화장실 충분", "# 공원", "# 난이도 적절"],
   places: ["이화여자대학교", "홍대 거리", "남산 둘레길"],
 };
+*/
 
 export default function DetailRecord() {
   const router = useRouter();

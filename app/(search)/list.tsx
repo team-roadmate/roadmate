@@ -1,6 +1,7 @@
 // app/(search)/list.tsx
 import RecordList, { RecordItem } from "@/src/components/RecordList";
 
+/*
 const searchRecords: RecordItem[] = [
   {
     id: "1",
@@ -23,7 +24,7 @@ const searchRecords: RecordItem[] = [
     likes: 98,
   },
 ];
-
+*/
 export default function SearchRecordScreen() {
   return (
     <RecordList
