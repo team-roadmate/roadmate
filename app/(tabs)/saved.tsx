@@ -1,10 +1,8 @@
 // app/(tabs)/Saved.tsx
-import React, { useEffect, useState } from "react";
 import RecordList, { RecordItem } from "@/src/components/RecordList";
+import React, { useEffect, useState } from "react";
 import { api } from "../../src/services/api";
 
-// ✅ API 실패 시 사용할 목업 데이터
-/*
 const mockSavedItems: RecordItem[] = [
   {
     id: "1",
@@ -26,9 +24,8 @@ const mockSavedItems: RecordItem[] = [
     rating: 4.8,
     likes: 98,
   },
-];*/
+];
 
-// ✅ 백엔드 응답 → RecordItem 으로 변환
 const mapCourseToRecordItem = (course: any): RecordItem => {
   return {
     id: String(course.id ?? course.routeId ?? Math.random()),
@@ -43,12 +40,11 @@ const mapCourseToRecordItem = (course: any): RecordItem => {
 };
 
 export default function SavedScreen() {
-  const [items, setItems] = useState<RecordItem[]>(mockSavedItems);
+  const [items, setItems] = useState<RecordItem[]>([]); // 초기 상태를 빈 배열로 설정
 
   useEffect(() => {
     const loadSavedCourses = async () => {
       try {
-        // 🔹 저장된 코스 목록 조회
         const res = await api.get("/api/routes/courses");
         console.log("저장 코스 응답:", res.data);
 
@@ -57,11 +53,12 @@ export default function SavedScreen() {
           const mapped: RecordItem[] = list.map(mapCourseToRecordItem);
           setItems(mapped);
         } else {
-          console.log("저장 코스 응답이 비어 있어 목업 사용");
+          console.log("저장 코스 응답이 비어 있음. 목업 사용");
+          setItems(mockSavedItems); // 응답이 비었을 때 목업 사용
         }
       } catch (err) {
-        console.log("저장 코스 로드 실패(예상: 403). 목업 사용", err);
-        // 실패 시 mockSavedItems 그대로 사용
+        console.error("저장 코스 로드 실패. 목업 사용", err); // console.error 사용
+        setItems(mockSavedItems); // 실패 시 목업 사용
       }
     };
 

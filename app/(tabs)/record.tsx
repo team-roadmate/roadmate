@@ -1,10 +1,8 @@
 // app/(tabs)/record.tsx
-import React, { useEffect, useState } from "react";
 import RecordList, { RecordItem } from "@/src/components/RecordList";
+import React, { useEffect, useState } from "react";
 import { api } from "../../src/services/api";
 
-// ✅ API 실패 시 사용할 목업 데이터
-/*
 const mockRecords: RecordItem[] = [
   {
     id: "1",
@@ -27,8 +25,7 @@ const mockRecords: RecordItem[] = [
     likes: 98,
   },
 ];
-*/
-// ✅ 백엔드 응답 → RecordItem 으로 변환
+
 const mapRouteToRecordItem = (route: any): RecordItem => {
   return {
     id: String(route.id ?? route.routeId ?? Math.random()),
@@ -43,12 +40,11 @@ const mapRouteToRecordItem = (route: any): RecordItem => {
 };
 
 export default function RecentRecordScreen() {
-  const [items, setItems] = useState<RecordItem[]>(mockRecords);
+  const [items, setItems] = useState<RecordItem[]>([]); // 초기 상태를 빈 배열로 설정
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        // 🔹 전체 산책 기록 조회
         const res = await api.get("/api/routes/history");
         console.log("최근 기록 응답:", res.data);
 
@@ -57,11 +53,12 @@ export default function RecentRecordScreen() {
           const mapped: RecordItem[] = list.map(mapRouteToRecordItem);
           setItems(mapped);
         } else {
-          console.log("최근 기록 응답이 비어 있어 목업 사용");
+          console.log("최근 기록 응답이 비어 있음. 목업 사용");
+          setItems(mockRecords); // 응답이 비었을 때 목업 사용
         }
       } catch (err) {
-        console.log("최근 기록 로드 실패(예상: 403). 목업 사용", err);
-        // 실패 시 mockRecords 그대로 사용
+        console.error("최근 기록 로드 실패. 목업 사용", err); // console.log 대신 console.error 사용
+        setItems(mockRecords); // 실패 시 목업 사용
       }
     };
 
