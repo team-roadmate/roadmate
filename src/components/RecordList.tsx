@@ -1,34 +1,43 @@
-// app/record/RecordList.tsx
+// src/components/RecordList.tsx
 import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { recordStyles as s } from "../styles/record.styles";
+import RecordMapPreview from "./RecordMapPreview"; // 맵 프리뷰 컴포넌트 임포트
 
+// RecordItem 타입에 경로 정보 추가
 export type RecordItem = {
-  id: string;
+  id: string; // routeId
   title: string;
   distance: string;
   duration: string;
   difficulty: string;
   tags: string[];
   rating: number;
-  likes: number;
+  // 경로 데이터를 추가합니다.
+  path: { latitude: number; longitude: number }[];
 };
 
 type Props = {
   screenTitle: string;
-  backTo?: string; // 뒤로가기 경로 (없으면 router.back)
-  sortOption?: string; // 정렬 옵션 텍스트
-  showReviewBtn?: boolean; // 리뷰 버튼 표시 여부
-  items: RecordItem[]; // 카드 데이터
+  backTo?: string;
+  sortOption?: string;
+  items: RecordItem[];
+  isLoading?: boolean;
 };
 
 export default function RecordList({
   screenTitle,
   backTo,
   sortOption = "거리순",
-  showReviewBtn = true,
   items,
+  isLoading = false,
 }: Props) {
   const router = useRouter();
 
@@ -39,7 +48,7 @@ export default function RecordList({
         <TouchableOpacity
           onPress={() => (backTo ? router.push(backTo) : router.back())}
         >
-          <Text style={s.backText}>‹</Text>
+          <Text style={s.backText}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>{screenTitle}</Text>
       </View>
@@ -58,61 +67,76 @@ export default function RecordList({
         </TouchableOpacity>
       </View>
 
-      {/* 카드 리스트 */}
-      {items.map((item) => (
-        <View key={item.id} style={s.card}>
-          <View style={s.cardImage}>
-            <Text style={s.imageText}>이미지</Text>
-          </View>
-
-          <View style={s.cardBody}>
-            <Text style={s.courseTitle}>{item.title}</Text>
-
-            <View style={s.infoRow}>
-              <Text style={s.infoText}>{item.distance}</Text>
-              <Text style={s.infoText}>{item.duration}</Text>
-              <Text style={s.infoText}>{item.difficulty}</Text>
-            </View>
-
-            <View style={s.tagRow}>
-              {item.tags.map((tag) => (
-                <View key={tag} style={s.tagPill}>
-                  <Text style={s.tagText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={s.scoreRow}>
-              <Text style={s.scoreLabel}>
-                별점 <Text style={s.scoreValue}>{item.rating}</Text>
-              </Text>
-              <Text style={s.scoreLabel}>
-                하트 <Text style={s.scoreValue}>{item.likes}</Text>
-              </Text>
-            </View>
-
-            <View style={showReviewBtn ? s.btnRow : s.centerBtnRow}>
-              <TouchableOpacity
-                style={showReviewBtn ? s.detailBtn : s.bigDetailBtn}
-                onPress={() => router.push("/detail_record")}
-              >
-                <Text style={showReviewBtn ? s.detailText : s.bigDetailText}>
-                  상세 보기
-                </Text>
-              </TouchableOpacity>
-
-              {showReviewBtn && (
-                <TouchableOpacity
-                  style={s.reviewBtn}
-                  onPress={() => router.push("/review")}
-                >
-                  <Text style={s.reviewText}>리뷰 보기</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
+      {/* 로딩 상태 */}
+      {isLoading && (
+        <View style={{ paddingVertical: 40, alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={{ marginTop: 16, color: "#666" }}>로딩 중...</Text>
         </View>
-      ))}
+      )}
+
+      {/* 빈 상태 */}
+      {!isLoading && items.length === 0 && (
+        <View style={{ paddingVertical: 40, alignItems: "center" }}>
+          <Text style={{ fontSize: 16, color: "#999" }}>
+            {screenTitle === "저장한 코스"
+              ? "저장된 코스가 없습니다."
+              : "기록이 없습니다."}
+          </Text>
+        </View>
+      )}
+
+      {/* 카드 리스트 */}
+      {!isLoading &&
+        items.map((item) => (
+          <View key={item.id} style={s.card}>
+            {/* 이미지 영역 대신 MapView 프리뷰 컴포넌트 사용 */}
+            <RecordMapPreview
+              path={item.path}
+              mapHeight={s.cardImage.height} // 기존 이미지 스타일 높이 재사용
+            />
+
+            <View style={s.cardBody}>
+              <Text style={s.courseTitle}>{item.title}</Text>
+
+              <View style={s.infoRow}>
+                <Text style={s.infoText}>{item.distance}</Text>
+                <Text style={s.infoText}>{item.duration}</Text>
+                <Text style={s.infoText}>{item.difficulty}</Text>
+              </View>
+
+              <View style={s.tagRow}>
+                {item.tags.map((tag) => (
+                  <View key={tag} style={s.tagPill}>
+                    <Text style={s.tagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* ⭐ 별점만 남김 */}
+              <View style={[s.scoreRow, { justifyContent: "flex-start" }]}>
+                <Text style={s.scoreLabel}>
+                  별점 <Text style={s.scoreValue}>{item.rating}</Text>
+                </Text>
+              </View>
+
+              {/* 버튼: 리뷰 버튼 제거 → 상세보기 하나만 */}
+              <View style={s.centerBtnRow}>
+                <TouchableOpacity
+                  style={s.bigDetailBtn}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/detail_record",
+                      params: { routeId: item.id }, // item.id를 routeId로 전달
+                    })
+                  }
+                >
+                  <Text style={s.bigDetailText}>상세 보기</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ))}
     </ScrollView>
   );
 }

@@ -1,269 +1,266 @@
-// app/(search)/search.tsx 또는 app/record/Search.tsx
-
+// app/(search)/search.tsx
+import Slider from "@react-native-community/slider";
+import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Alert, // ✅ Alert 추가 (유효성 검사 대비)
+  View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
+import { useRouteStore } from "../../src/store/routeStore";
+import { LoopEstimateResponse, PathRequest } from "../../src/types/data.types";
 
-// ✅ api.ts 위치에 맞게 경로 조정 (프로젝트 루트에 src/services/api.ts 라고 가정)
-import { api } from "../../src/services/api";
+const NAVY = "#001A72";
 
-// ✅ Search.styles.ts 가 이 파일과 같은 폴더에 있다고 가정
-import { searchStyles as styles } from "./Search.styles";
+const InputRow = ({ label, value, onChange, placeholder }: any) => (
+  <View style={{ marginBottom: 12 }}>
+    <Text>{label}</Text>
+    <TextInput
+      style={styles.input}
+      placeholder={placeholder}
+      keyboardType="numeric"
+      value={value?.toString() || ""}
+      onChangeText={(v) => onChange(Number(v))}
+    />
+  </View>
+);
 
-const THEMES = ["카페", "공원", "전시회"];
-
-// ----------------------------------------------------
-// ⚠️ [수정 1] API가 요구하는 형식에 맞추기 위한 목업 데이터 및 변환 함수
-// ----------------------------------------------------
-
-// 예시 목업 좌표 데이터 (실제 프로젝트에서는 지오코딩 API를 사용해야 합니다.)
-/*
-const MOCK_COORDS = {
-  // 사용자가 입력한 텍스트에 따라 목업 좌표를 반환한다고 가정
-  "출발지(기본은 현재위치)": { lat: 37.498498, lon: 126.860412 }, // 기본값
-  "도착지": { lat: 37.499795, lon: 126.867730 },
-  "강남역": { lat: 37.4979, lon: 127.0276 },
-  "홍대입구역": { lat: 37.557, lon: 126.924 },
-};
-*/
-
-/**
- * 입력된 장소 이름을 기반으로 위도/경도를 반환하는 목업 함수
- * 실제 구현 시에는 지오코딩(Geocoding) API를 사용해야 합니다.
- */
-const getMockCoordinates = (locationName: string) => {
-  const normalizedName = locationName.trim();
-  // 사용자가 '도착지'나 '출발지' 같은 placeholder를 그대로 입력했을 때를 대비
-  if (normalizedName === "") {
-    return MOCK_COORDS["출발지(기본은 현재위치)"];
-  }
-
-  // 입력된 이름이 목업 데이터에 있으면 해당 좌표를 반환
-  if (MOCK_COORDS[normalizedName as keyof typeof MOCK_COORDS]) {
-    return MOCK_COORDS[normalizedName as keyof typeof MOCK_COORDS];
-  }
-
-  // 매칭되는 이름이 없으면 기본 좌표를 반환하거나 에러 처리
-  return MOCK_COORDS["출발지(기본은 현재위치)"];
-};
-// ----------------------------------------------------
+const ActionButton = ({ text, onPress, style, textStyle }: any) => (
+  <TouchableOpacity style={[styles.buttonBase, style]} onPress={onPress}>
+    <Text style={[styles.buttonTextBase, textStyle]}>{text}</Text>
+  </TouchableOpacity>
+);
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { searchShortestPath, estimateLoop, generateLoop } = useRouteStore();
 
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [activeTheme, setActiveTheme] = useState<string>("카페");
-  const [distance, setDistance] = useState<number>(5); // 0~10 km
-  const [time, setTime] = useState<number>(0.5); // 0~1 h
+  const [coords, setCoords] = useState<{
+    startLat: number | null;
+    startLon: number | null;
+    endLat: number | null;
+    endLon: number | null;
+  }>({
+    startLat: 37.499529,
+    startLon: 126.867127,
+    endLat: 37.544632,
+    endLon: 126.88844,
+  });
+  const [loopEstimate, setLoopEstimate] = useState<LoopEstimateResponse | null>(
+    null
+  );
+  const [targetDistance, setTargetDistance] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState(0);
 
-  // 🔍 검색 버튼 눌렀을 때
-  const handleSearch = async () => {
-
-    // ✅ [수정 2] 유효성 검사 추가 (도착지 필수)
-    if (!end.trim()) {
-      Alert.alert("알림", "도착지를 입력해 주세요.");
-      return;
-    }
-
-    // ✅ [수정 3] 입력된 장소 이름을 API 형식에 맞는 좌표로 변환
-    const startCoords = getMockCoordinates(start);
-    const endCoords = getMockCoordinates(end);
-
-    console.log("검색 조건", {
-      start: startCoords,
-      end: endCoords,
-      theme: activeTheme,
-      distance,
-      time,
-    });
-
-    // ----------------------------------------------------
-    // ⚠️ [수정 4] API 형식에 맞게 파라미터 이름 수정 및 목업 응답 처리
-    // ----------------------------------------------------
+  const fetchCurrentLocation = async () => {
     try {
-      // API URL 형식: /api/path/shortest?startLat={startLat}&startLon={startLon}&endLat={endLat}&endLon={endLon}
-      const res = await api.get("/api/path/shortest", {
-        params: {
-          startLat: startCoords.lat,
-          startLon: startCoords.lon,
-          endLat: endCoords.lat,
-          endLon: endCoords.lon,
-          // 참고: 테마, 거리, 시간도 필요하면 여기에 추가
-          theme: activeTheme,
-          maxDistance: distance.toFixed(1),
-          maxTime: time.toFixed(1),
-        },
-      });
-      console.log("최단 경로 응답", res.data);
-    } catch (err) {
-      console.log("검색 실패(403 예상). 목업 데이터로 진행합니다.", err);
-
-      // ✅ [수정 5] API 실패 시 콘솔에 목업 응답 데이터 출력
-      const mockResponse = {
-        status: 200,
-        data: {
-          pathId: "mock_path_123",
-          distance: `${distance.toFixed(1)}km`,
-          time: `${Math.round(time * 60)}분`,
-          theme: activeTheme,
-          points: [
-            { lat: startCoords.lat, lon: startCoords.lon, name: "출발지" },
-            { lat: 37.50, lon: 126.865, name: "경유지" },
-            { lat: endCoords.lat, lon: endCoords.lon, name: "도착지" },
-          ],
-        },
-      };
-      console.log(">> 목업 API 응답 데이터:", mockResponse.data);
-      // 실패해도 지금은 그냥 리스트 화면으로 넘어가게만 사용
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted")
+        return Alert.alert("권한 필요", "현재 위치 권한이 필요합니다.");
+      const loc = await Location.getCurrentPositionAsync({});
+      setCoords((prev) => ({
+        ...prev,
+        startLat: loc.coords.latitude,
+        startLon: loc.coords.longitude,
+      }));
+    } catch {
+      Alert.alert("오류", "현재 위치를 가져오지 못했습니다.");
     }
-    // ----------------------------------------------------
+  };
 
-    // ✅ 어쨌든 검색 버튼 누르면 결과 리스트 화면으로 이동
-    // 검색 결과를 전달하기 위해 쿼리 파라미터를 추가하는 것을 권장합니다.
-    router.push({
-        pathname: "/list",
-        params: {
-            theme: activeTheme,
-            distance: distance.toFixed(1),
-            time: Math.round(time * 60).toString(), // 분 단위로 변환하여 전달
-        }
-    });
+  const handleShortestSearch = async () => {
+    const { startLat, startLon, endLat, endLon } = coords;
+    if (!startLat || !startLon || !endLat || !endLon)
+      return Alert.alert("입력 필요", "좌표를 모두 입력해주세요.");
+
+    try {
+      await searchShortestPath({
+        startLat,
+        startLon,
+        endLat,
+        endLon,
+      } as PathRequest);
+
+      const result = useRouteStore.getState().currentPathResult;
+      if (result?.path?.length) {
+        router.push("/(search)/path_detail");
+      } else {
+        Alert.alert("경로 없음", "최단 경로를 찾지 못했습니다.");
+      }
+    } catch (err: any) {
+      Alert.alert("오류", err.message || "최단 경로 검색에 실패했습니다.");
+    }
+  };
+
+  const handleLoopEstimate = async () => {
+    const { startLat, startLon, endLat, endLon } = coords;
+    if (!startLat || !startLon || !endLat || !endLon)
+      return Alert.alert("입력 필요", "좌표를 모두 입력해주세요.");
+
+    try {
+      await estimateLoop({
+        startLat,
+        startLng: startLon,
+        viaLat: endLat,
+        viaLng: endLon,
+      });
+      const estimate = useRouteStore.getState().loopEstimateResult;
+      if (estimate?.feasible) {
+        setLoopEstimate(estimate);
+        setTargetDistance(estimate.recommendedMin);
+        setEstimatedTime((estimate.recommendedMin / 5) * 60);
+        Alert.alert(
+          "루프 준비 완료",
+          estimate.message || "루프 경로 준비 완료"
+        );
+      } else {
+        setLoopEstimate(null);
+        Alert.alert(
+          "루프 준비 실패",
+          estimate?.message || "생성 가능성이 낮습니다."
+        );
+      }
+    } catch (err: any) {
+      Alert.alert("오류", err.message || "루프 준비 중 오류 발생");
+    }
+  };
+
+  const handleLoopGenerate = async () => {
+    const { startLat, startLon, endLat, endLon } = coords;
+    if (!loopEstimate || targetDistance === 0)
+      return Alert.alert(
+        "루프 준비 필요",
+        "루프 준비 후 목표 거리를 설정해주세요."
+      );
+    if (!startLat || !startLon || !endLat || !endLon)
+      return Alert.alert("좌표 누락", "좌표를 확인해주세요.");
+
+    try {
+      await generateLoop({
+        startLat,
+        startLng: startLon,
+        viaLat: endLat,
+        viaLng: endLon,
+        targetDistanceKm: targetDistance,
+        tolerancePercent: 10,
+      });
+      const response = useRouteStore.getState().loopPathResult;
+      if (response?.path?.length) {
+        router.push("/(search)/loop_detail");
+      } else {
+        Alert.alert(
+          "생성 실패",
+          response?.message || "경로를 찾지 못했습니다."
+        );
+      }
+    } catch (err: any) {
+      Alert.alert("오류", err.message || "루프 경로 생성 중 오류 발생");
+    }
   };
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
+      style={{ flex: 1, backgroundColor: "#FFF" }}
+      contentContainerStyle={{ padding: 24 }}
     >
-      {/* 상단 헤더 */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#001A72" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>코스 상세 검색</Text>
-      </View>
+      <Text
+        style={{
+          fontSize: 26,
+          fontWeight: "800",
+          color: NAVY,
+          marginBottom: 20,
+        }}
+      >
+        경로 검색
+      </Text>
 
-      {/* 출발지 / 도착지 */}
-      <View style={styles.inputGroup}>
-        <TextInput
-          style={styles.textInput}
-          placeholder="출발지(기본은 현재위치)"
-          placeholderTextColor="#B0B0B0"
-          value={start}
-          onChangeText={setStart}
-        />
-        <TextInput
-          style={styles.textInput}
-          placeholder="도착지"
-          placeholderTextColor="#B0B0B0"
-          value={end}
-          onChangeText={setEnd}
-        />
-      </View>
+      <InputRow
+        label="출발지 위도"
+        value={coords.startLat}
+        onChange={(v: number) => setCoords((p) => ({ ...p, startLat: v }))}
+        placeholder="위도 입력"
+      />
+      <InputRow
+        label="출발지 경도"
+        value={coords.startLon}
+        onChange={(v: number) => setCoords((p) => ({ ...p, startLon: v }))}
+        placeholder="경도 입력"
+      />
+      <ActionButton
+        text="현재 위치 사용"
+        onPress={fetchCurrentLocation}
+        style={{ backgroundColor: "#EEE", marginTop: 10 }}
+      />
 
-      {/* 코스 조건 제목 */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>코스 조건</Text>
-      </View>
+      <InputRow
+        label="경유지 위도"
+        value={coords.endLat}
+        onChange={(v: number) => setCoords((p) => ({ ...p, endLat: v }))}
+        placeholder="위도 입력"
+      />
+      <InputRow
+        label="경유지 경도"
+        value={coords.endLon}
+        onChange={(v: number) => setCoords((p) => ({ ...p, endLon: v }))}
+        placeholder="경도 입력"
+      />
 
-      {/* 테마 선택 */}
-      <View style={styles.sectionBlock}>
-        <Text style={styles.label}>테마 선택</Text>
-        <View style={styles.themeRow}>
-          {THEMES.map((theme) => {
-            const isActive = activeTheme === theme;
-            return (
-              <TouchableOpacity
-                key={theme}
-                style={[styles.chip, isActive && styles.chipActive]}
-                onPress={() => setActiveTheme(theme)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    isActive && styles.chipTextActive,
-                  ]}
-                >
-                  #{theme}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+      <ActionButton
+        text="최단 경로 검색"
+        onPress={handleShortestSearch}
+        style={{ backgroundColor: NAVY, marginTop: 20 }}
+        textStyle={{ color: "#FFF", fontWeight: "700" }}
+      />
+      <ActionButton
+        text="루프 경로 준비"
+        onPress={handleLoopEstimate}
+        style={{ backgroundColor: "#EEE", marginTop: 10 }}
+      />
 
-          {/* ... 버튼 */}
-          <TouchableOpacity style={styles.moreChip}>
-            <Text style={styles.moreChipText}>...</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* 거리 슬라이더 */}
-      <View style={styles.sectionBlock}>
-        <Text style={styles.sectionTitle}>거리</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={10}
-          step={0.5}
-          minimumTrackTintColor="#001A72"
-          maximumTrackTintColor="#E1E4EC"
-          thumbTintColor="#001A72"
-          value={distance}
-          onValueChange={setDistance}
-        />
-        <View style={styles.sliderLabelRow}>
-          <Text style={styles.sliderSideText}>0km</Text>
-          <Text style={styles.sliderCenterText}>
-            {distance.toFixed(1)}km
+      {loopEstimate && (
+        <View style={{ marginTop: 20 }}>
+          <Text>
+            목표 거리: {targetDistance.toFixed(1)} km (
+            {loopEstimate.recommendedMin.toFixed(1)} ~{" "}
+            {loopEstimate.recommendedMax.toFixed(1)} km)
           </Text>
-          <Text style={styles.sliderSideText}>10km</Text>
+          <Slider
+            minimumValue={loopEstimate.recommendedMin}
+            maximumValue={loopEstimate.recommendedMax}
+            step={0.1}
+            value={targetDistance}
+            onValueChange={(v) => {
+              setTargetDistance(v);
+              setEstimatedTime((v / 5) * 60);
+            }}
+          />
+          <Text>예상 소요시간: {Math.round(estimatedTime)} 분</Text>
+          <ActionButton
+            text="루프 경로 탐색"
+            onPress={handleLoopGenerate}
+            style={{ backgroundColor: NAVY, marginTop: 10 }}
+            textStyle={{ color: "#FFF", fontWeight: "700" }}
+          />
         </View>
-      </View>
-
-      {/* 예상 소요 시간 슬라이더 */}
-      <View style={styles.sectionBlock}>
-        <Text style={styles.sectionTitle}>예상 소요 시간</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={1}
-          step={0.1}
-          minimumTrackTintColor="#001A72"
-          maximumTrackTintColor="#E1E4EC"
-          thumbTintColor="#001A72"
-          value={time}
-          onValueChange={setTime}
-        />
-        <View style={styles.sliderLabelRow}>
-          <Text style={styles.sliderSideText}>0h (0분)</Text>
-          {/* ✅ [수정 6] 시간 슬라이더 표시를 분 단위로 변환 */}
-          <Text style={styles.sliderCenterText}>
-            {Math.round(time * 60)}분 ({time.toFixed(1)}h)
-          </Text>
-          <Text style={styles.sliderSideText}>1h (60분)</Text>
-        </View>
-      </View>
-
-      {/* 검색 버튼 */}
-      <View style={styles.buttonWrapper}>
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={handleSearch}
-        >
-          <Text style={styles.searchButtonText}>검색</Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </ScrollView>
   );
 }
+
+const styles = {
+  input: {
+    borderWidth: 1,
+    borderColor: "#E1E4EC",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    backgroundColor: "#F9FAFC",
+  },
+  buttonBase: { borderRadius: 10, paddingVertical: 16, alignItems: "center" },
+  buttonTextBase: { fontSize: 16, color: "#333", fontWeight: "600" },
+};

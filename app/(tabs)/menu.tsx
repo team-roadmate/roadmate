@@ -111,11 +111,11 @@ export default function MenuScreen() {
           title="저장한 코스"
           onPress={() => handlePress("저장한 코스")}
         />
-        <MenuItem
+        {/* <MenuItem
           title="배지 및 업적"
           onPress={() => handlePress("배지 및 업적")}
         />
-        <MenuItem title="설정" onPress={() => handlePress("설정")} />
+        <MenuItem title="설정" onPress={() => handlePress("설정")} /> */}
         <MenuItem title="로그아웃" onPress={() => handlePress("로그아웃")} />
       </View>
 

@@ -9,27 +9,30 @@ import RecentActivityList from "../../src/components/RecentActivityList";
 import WeatherSummaryCard from "../../src/components/WeatherSummaryCard";
 import { dataService } from "../../src/services/data.service";
 import { useAuthStore } from "../../src/store/authStore";
-import { RouteHistoryItem, WeatherData } from "../../src/types/data.types";
+import { useRouteStore } from "../../src/store/routeStore";
+import { WeatherData } from "../../src/types/data.types";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { logout } = useAuthStore();
   const navigation = useNavigation();
 
+  const { historyList, isLoadingHistory, fetchRouteHistory } = useRouteStore();
+
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [history, setHistory] = useState<RouteHistoryItem[]>([]);
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  const recentHistory = historyList.slice(0, 4);
 
   const loadHomeData = async () => {
     setIsWeatherLoading(true);
-    setIsHistoryLoading(true);
 
     let lat = 37.480871;
     let lon = 126.77032;
     let locationName = "위치 확인 중...";
 
+    // 1. 위치 정보 및 지오코딩 획득
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
@@ -53,6 +56,7 @@ export default function HomeScreen() {
       setLocationError("위치 정보 획득 중 오류가 발생했습니다.");
     }
 
+    // 2. 날씨 정보 로드
     try {
       const weatherData = await dataService.fetchCurrentWeather(lat, lon);
       setWeather({ ...weatherData, locationName });
@@ -62,13 +66,11 @@ export default function HomeScreen() {
       setIsWeatherLoading(false);
     }
 
+    // 3. 기록 정보 로드 (Zustand 사용)
     try {
-      const historyResponse = await dataService.fetchRouteHistory();
-      if (historyResponse.success) setHistory(historyResponse.data.slice(0, 4));
+      await fetchRouteHistory();
     } catch (e) {
       console.error("기록 로드 실패:", e);
-    } finally {
-      setIsHistoryLoading(false);
     }
   };
 
@@ -85,12 +87,11 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <View style={styles.searchBox}>
           <TouchableOpacity
-            style={styles.searchButton}
-            onPress={() => router.push("/(search)/search")} // 원하는 화면 경로로 변경
+            style={[styles.searchButton, styles.searchButtonMargin]}
+            onPress={() => router.push("/(search)/search")}
           >
             <Text style={styles.searchButtonText}>🔍 검색어 입력</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}>
             <Text style={styles.menuIcon}>☰</Text>
           </TouchableOpacity>
@@ -112,13 +113,13 @@ export default function HomeScreen() {
           />
         </View>
 
-        <Text style={styles.sectionTitle}>테마별 추천 코스</Text>
-        <Text style={styles.placeholderText}>(API 부족으로 구현 생략)</Text>
+        {/* <Text style={styles.sectionTitle}>테마별 추천 코스</Text>
+        <Text style={styles.placeholderText}>(API 부족으로 구현 생략)</Text> */}
 
         <RecentActivityList
-          history={history}
+          history={recentHistory}
           router={router}
-          isLoading={isHistoryLoading}
+          isLoading={isLoadingHistory}
         />
       </View>
     </SafeAreaView>
@@ -148,11 +149,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
   },
+  searchButtonMargin: {
+    marginRight: 12,
+  },
   searchButtonText: {
     fontSize: 16,
     color: "#999",
   },
-  menuButton: { marginLeft: 12, padding: 6 },
+  menuButton: { padding: 6 },
   menuIcon: { fontSize: 22, color: "#333" },
   dashboardContainer: {
     flexDirection: "row",

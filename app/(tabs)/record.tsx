@@ -1,79 +1,76 @@
 // app/(tabs)/record.tsx
-import React, { useEffect, useState } from "react";
 import RecordList, { RecordItem } from "@/src/components/RecordList";
-import { api } from "../../src/services/api";
+import React, { useEffect } from "react";
+import { useRouteStore } from "../../src/store/routeStore";
+import { PathNode, WalkRoute } from "../../src/types/data.types"; // PathNode 임포트
 
-// ✅ API 실패 시 사용할 목업 데이터
-/*
-const mockRecords: RecordItem[] = [
-  {
-    id: "1",
-    title: "한강공원 힐링 코스",
-    distance: "3.8km",
-    duration: "45분",
-    difficulty: "쉬움",
-    tags: ["#카페", "#공원", "#버스킹"],
-    rating: 4.5,
-    likes: 130,
-  },
-  {
-    id: "2",
-    title: "이화여대 감성 산책 코스",
-    distance: "2.1km",
-    duration: "30분",
-    difficulty: "보통",
-    tags: ["#캠퍼스", "#사진스팟", "#카페"],
-    rating: 4.8,
-    likes: 98,
-  },
-];
-*/
-// ✅ 백엔드 응답 → RecordItem 으로 변환
-const mapRouteToRecordItem = (route: any): RecordItem => {
+// 날짜를 "MM월 DD일 산책" 형식으로 변환
+const formatDateTitle = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}월 ${day}일 산책`;
+  } catch {
+    return "산책 기록";
+  }
+};
+
+// WalkRoute를 RecordItem으로 변환하는 함수
+const mapRouteToRecordItem = (route: WalkRoute): RecordItem => {
+  const distance = route.distance || route.expectedDistance;
+  const duration = route.duration || route.expectedDuration; // 제목이 있으면 그대로, 없으면 날짜 기반 제목 생성
+
+  const title = route.title || formatDateTitle(route.startTime); // 🚩 [핵심 수정] pathData를 PathNode[]로 파싱
+
+  let path: PathNode[] = [];
+  try {
+    if (route.pathData) {
+      // pathData가 PathNode[] 형태의 JSON 문자열이라고 가정합니다.
+      const parsedData = JSON.parse(route.pathData); // 유효성 검사 추가
+      if (
+        Array.isArray(parsedData) &&
+        parsedData.every((item) => "latitude" in item && "longitude" in item)
+      ) {
+        path = parsedData as PathNode[];
+      } else {
+        // console.warn(`경로 ID ${route.routeId}: pathData의 JSON 구조가 예상과 다릅니다.`);
+      }
+    }
+  } catch (e) {
+    // console.error(`경로 ID ${route.routeId}: pathData 파싱 오류`, e);
+  }
+
   return {
-    id: String(route.id ?? route.routeId ?? Math.random()),
-    title: route.title ?? route.name ?? "제목 없음",
-    distance: (route.totalDistanceKm ?? route.distance ?? 0) + "km",
-    duration: (route.durationMinutes ?? route.time ?? 0) + "분",
-    difficulty: route.difficulty ?? "보통",
-    tags: route.tags ?? ["#코스"],
-    rating: route.rating ?? 4.5,
-    likes: route.likes ?? 0,
+    id: String(route.routeId),
+    title,
+    distance: (distance / 1000).toFixed(1) + "km",
+    duration: Math.round(duration / 60) + "분",
+    difficulty: route.status === "COMPLETED" ? "완료" : "진행중",
+    tags: [
+      route.isCourse ? "#저장코스" : "#기록",
+      ...(route.rating ? [`#평점${route.rating}`] : []),
+    ],
+    rating: route.rating || 0,
+    path: path, // 🚩 파싱된 경로 데이터 할당
   };
 };
 
 export default function RecentRecordScreen() {
-  const [items, setItems] = useState<RecordItem[]>(mockRecords);
+  const { historyList, isLoadingHistory, fetchRouteHistory } = useRouteStore();
 
   useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        // 🔹 전체 산책 기록 조회
-        const res = await api.get("/api/routes/history");
-        console.log("최근 기록 응답:", res.data);
+    fetchRouteHistory();
+  }, []); // WalkRoute[]를 RecordItem[]로 변환
 
-        const list = Array.isArray(res.data) ? res.data : res.data?.data;
-        if (Array.isArray(list) && list.length > 0) {
-          const mapped: RecordItem[] = list.map(mapRouteToRecordItem);
-          setItems(mapped);
-        } else {
-          console.log("최근 기록 응답이 비어 있어 목업 사용");
-        }
-      } catch (err) {
-        console.log("최근 기록 로드 실패(예상: 403). 목업 사용", err);
-        // 실패 시 mockRecords 그대로 사용
-      }
-    };
-
-    loadHistory();
-  }, []);
+  const items: RecordItem[] = historyList.map(mapRouteToRecordItem); // showReviewBtn 속성이 RecordList Props에 정의되어 있지 않아 제거했습니다.
 
   return (
     <RecordList
       screenTitle="최근 기록"
       sortOption="날짜순"
-      showReviewBtn={true}
-      items={items}
+      items={isLoadingHistory ? [] : items}
+      isLoading={isLoadingHistory}
     />
   );
 }

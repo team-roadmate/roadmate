@@ -1,80 +1,78 @@
-// app/(tabs)/Saved.tsx
-import React, { useEffect, useState } from "react";
+// app/(tabs)/saved.tsx
 import RecordList, { RecordItem } from "@/src/components/RecordList";
-import { api } from "../../src/services/api";
+import React, { useEffect } from "react";
+import { useRouteStore } from "../../src/store/routeStore";
+import { PathNode, WalkRoute } from "../../src/types/data.types"; // PathNode 임포트
 
-// ✅ API 실패 시 사용할 목업 데이터
-/*
-const mockSavedItems: RecordItem[] = [
-  {
-    id: "1",
-    title: "한강공원 힐링 코스",
-    distance: "3.8km",
-    duration: "45분",
-    difficulty: "쉬움",
-    tags: ["#카페", "#공원", "#버스킹"],
-    rating: 4.5,
-    likes: 130,
-  },
-  {
-    id: "2",
-    title: "이화여대 감성 산책 코스",
-    distance: "2.1km",
-    duration: "30분",
-    difficulty: "보통",
-    tags: ["#캠퍼스", "#사진스팟", "#카페"],
-    rating: 4.8,
-    likes: 98,
-  },
-];*/
+// 날짜를 "MM월 DD일 산책" 형식으로 변환
+const formatDateTitle = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}월 ${day}일 산책`;
+  } catch {
+    return "저장된 코스";
+  }
+};
 
-// ✅ 백엔드 응답 → RecordItem 으로 변환
-const mapCourseToRecordItem = (course: any): RecordItem => {
+// WalkRoute를 RecordItem으로 변환하는 함수
+const mapCourseToRecordItem = (course: WalkRoute): RecordItem => {
+  const distance = course.distance || course.expectedDistance;
+  const duration = course.duration || course.expectedDuration; // 제목이 있으면 그대로, 없으면 날짜 기반 제목 생성
+
+  const title = course.title || formatDateTitle(course.startTime); // 🚩 [핵심 수정] pathData를 PathNode[]로 파싱
+
+  let path: PathNode[] = [];
+  try {
+    if (course.pathData) {
+      // pathData가 PathNode[] 형태의 JSON 문자열이라고 가정합니다.
+      const parsedData = JSON.parse(course.pathData); // 유효성 검사 추가
+      if (
+        Array.isArray(parsedData) &&
+        parsedData.every((item) => "latitude" in item && "longitude" in item)
+      ) {
+        path = parsedData as PathNode[];
+      } else {
+        // console.warn(`코스 ID ${course.routeId}: pathData의 JSON 구조가 예상과 다릅니다.`);
+      }
+    }
+  } catch (e) {
+    // console.error(`코스 ID ${course.routeId}: pathData 파싱 오류`, e);
+  }
+
   return {
-    id: String(course.id ?? course.routeId ?? Math.random()),
-    title: course.title ?? course.name ?? "제목 없음",
-    distance: (course.totalDistanceKm ?? course.distance ?? 0) + "km",
-    duration: (course.durationMinutes ?? course.time ?? 0) + "분",
-    difficulty: course.difficulty ?? "보통",
-    tags: course.tags ?? ["#저장코스"],
-    rating: course.rating ?? 4.5,
-    likes: course.likes ?? 0,
+    id: String(course.routeId),
+    title,
+    distance: (distance / 1000).toFixed(1) + "km",
+    duration: Math.round(duration / 60) + "분",
+    difficulty: "저장코스",
+    tags: [
+      "#저장코스",
+      ...(course.rating ? [`#평점${course.rating}`] : []),
+      ...(course.memo ? ["#메모있음"] : []),
+    ],
+    rating: course.rating || 0,
+    path: path, // 🚩 파싱된 경로 데이터 할당
   };
 };
 
 export default function SavedScreen() {
-  const [items, setItems] = useState<RecordItem[]>(mockSavedItems);
+  const { courseList, isLoadingHistory, fetchSavedCourses } = useRouteStore();
 
   useEffect(() => {
-    const loadSavedCourses = async () => {
-      try {
-        // 🔹 저장된 코스 목록 조회
-        const res = await api.get("/api/routes/courses");
-        console.log("저장 코스 응답:", res.data);
+    fetchSavedCourses();
+  }, []); // WalkRoute[]를 RecordItem[]로 변환
 
-        const list = Array.isArray(res.data) ? res.data : res.data?.data;
-        if (Array.isArray(list) && list.length > 0) {
-          const mapped: RecordItem[] = list.map(mapCourseToRecordItem);
-          setItems(mapped);
-        } else {
-          console.log("저장 코스 응답이 비어 있어 목업 사용");
-        }
-      } catch (err) {
-        console.log("저장 코스 로드 실패(예상: 403). 목업 사용", err);
-        // 실패 시 mockSavedItems 그대로 사용
-      }
-    };
-
-    loadSavedCourses();
-  }, []);
+  const items: RecordItem[] = courseList.map(mapCourseToRecordItem); // showReviewBtn 속성이 RecordList Props에 정의되어 있지 않아 제거했습니다.
 
   return (
     <RecordList
       screenTitle="저장한 코스"
       backTo="/home"
       sortOption="거리순"
-      showReviewBtn={true}
-      items={items}
+      items={isLoadingHistory ? [] : items}
+      isLoading={isLoadingHistory}
     />
   );
 }
