@@ -1,4 +1,4 @@
-// app/temp/RouteGuideScreen.tsx
+// app/(guide)/route-guide.tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -11,9 +11,12 @@ import {
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
-import EndGuideModal from "../Guide/EndGuideModal";
-import RouteGuideHeader from "../Guide/RouteGuideHeader";
-import useCurrentLocation from "../app/hooks/useCurrentLocation";
+import BottomDistanceBar from "../../src/components/Guide/BottomDistanceBar";
+import CurrentLocationButton from "../../src/components/Guide/CurrentLocationButton";
+import DirectionArrow from "../../src/components/Guide/DirectionArrow";
+import EndGuideModal from "../../src/components/Guide/EndGuideModal";
+import RouteGuideHeader from "../../src/components/Guide/RouteGuideHeader";
+import useCurrentLocation from "../../src/hooks/useCurrentLocation";
 
 // ─────────────────────────
 // 타입 정의
@@ -31,64 +34,7 @@ type RouteParams = {
 };
 
 // ─────────────────────────
-// 이 파일 안에서만 쓰는 작은 UI 컴포넌트들
-// ─────────────────────────
-
-// 화살표
-type ArrowDirection = "left" | "right" | "up";
-type ArrowProps = { direction: ArrowDirection };
-
-function DirectionArrow({ direction }: ArrowProps) {
-  const arrowChar =
-    direction === "left" ? "←" : direction === "right" ? "→" : "↑";
-  const label =
-    direction === "left" ? "좌회전" : direction === "right" ? "우회전" : "직진";
-
-  return (
-    <View style={arrowStyles.container}>
-      <Text style={arrowStyles.arrow}>{arrowChar}</Text>
-      <Text style={arrowStyles.label}>{label}</Text>
-    </View>
-  );
-}
-
-// 현위치 버튼
-type CurrentLocationButtonProps = { onPress?: () => void };
-function CurrentLocationButton({ onPress }: CurrentLocationButtonProps) {
-  return (
-    <TouchableOpacity
-      style={currentBtnStyles.container}
-      activeOpacity={0.8}
-      onPress={onPress}
-    >
-      <Text style={currentBtnStyles.text}>현위치</Text>
-    </TouchableOpacity>
-  );
-}
-
-// 하단 바
-type BottomDistanceBarProps = {
-  distance: number; // m
-  direction: string;
-};
-function BottomDistanceBar({ distance, direction }: BottomDistanceBarProps) {
-  const km = distance / 1000;
-  const distanceText =
-    distance >= 1000 ? `${km.toFixed(1)}km` : `${distance}m`;
-
-  return (
-    <View style={bottomStyles.container}>
-      <Text style={bottomStyles.distance}>{distanceText}</Text>
-      <Text style={bottomStyles.direction}>{direction}</Text>
-      <View style={bottomStyles.progressOuter}>
-        <View style={bottomStyles.progressInner} />
-      </View>
-    </View>
-  );
-}
-
-// ─────────────────────────
-// 메인 화면 컴포넌트 (expo-router 방식)
+// 메인 화면 컴포넌트
 // ─────────────────────────
 
 export default function RouteGuideScreen() {
@@ -209,9 +155,9 @@ export default function RouteGuideScreen() {
 
         // 👉 완료 페이지로 교체 이동 (expo-router)
         router.replace({
-          pathname: "../temp/RouteCompletePage",
+          pathname: "/(guide)/route-complete",
           params: {
-            routeId: "", // 목업이라 일단 빈값
+            routeId: routeIdParam ? String(routeIdParam) : "",
             distance: String(totalDistance),
             duration: String(totalDurationSec),
             startedAt: walkStartTime ? String(walkStartTime) : "",
@@ -228,7 +174,15 @@ export default function RouteGuideScreen() {
     if (distanceToNext <= 20) {
       setCurrentIndex((idx) => Math.min(idx + 1, waypoints.length - 1));
     }
-  }, [distanceToNext, currentIndex, nextPoint, waypoints, walkStartTime, router]);
+  }, [
+    distanceToNext,
+    currentIndex,
+    nextPoint,
+    waypoints,
+    walkStartTime,
+    router,
+    routeIdParam,
+  ]);
 
   // 헤더 crumb 텍스트
   const headerCrumbs = waypoints.map((wp, idx) => {
@@ -362,8 +316,8 @@ export default function RouteGuideScreen() {
           onCancel={() => setShowEndModal(false)}
           onEnd={() => {
             setShowEndModal(false);
-            // 👉 expo-router로 탭 홈으로 이동
-            router.replace("/(tabs)/home");
+            // 산책 중단 시 완료 페이지 거치지 않고 바로 홈으로
+            router.push("/route-complete");
           }}
         />
       </Modal>
@@ -391,13 +345,13 @@ const styles = StyleSheet.create({
   },
   arrowWrapper: {
     position: "absolute",
-    bottom: 50, // 🔽 더 아래로
+    bottom: 50,
     alignSelf: "center",
   },
   currentBtnWrapper: {
     position: "absolute",
     right: 16,
-    bottom: 20, // 🔽 더 아래로
+    bottom: 20,
   },
   endButton: {
     paddingHorizontal: 20,
@@ -432,91 +386,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
     textAlign: "center",
-  },
-});
-
-// 화살표
-const arrowStyles = StyleSheet.create({
-  container: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  arrow: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 2,
-  },
-  label: {
-    fontSize: 11,
-    color: "#666",
-  },
-});
-
-// 현위치 버튼
-const currentBtnStyles = StyleSheet.create({
-  container: {
-    minWidth: 72,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  text: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#333",
-  },
-});
-
-// 하단 바
-const bottomStyles = StyleSheet.create({
-  container: {
-    height: 80,
-    backgroundColor: "#F3F4F7",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E0E2E8",
-  },
-  distance: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111",
-  },
-  direction: {
-    marginTop: 2,
-    fontSize: 13,
-    color: "#666",
-  },
-  progressOuter: {
-    marginTop: 8,
-    width: "70%",
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#D1D4DD",
-    overflow: "hidden",
-  },
-  progressInner: {
-    width: "40%",
-    height: "100%",
-    backgroundColor: "#111",
   },
 });

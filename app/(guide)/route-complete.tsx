@@ -1,4 +1,5 @@
-// screens/RouteCompletePage.tsx
+// app/(guide)/route-complete.tsx
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
@@ -9,34 +10,25 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { apiClient } from "../../src/services/api";
 
-const API_BASE_URL = "http://rmate.kro.kr:4080";
-
-type RouteCompletePageProps = {
-  route: {
-    params?: {
-      routeId?: number | null;
-      distance?: number;   // m 단위
-      duration?: number;   // 초 단위
-      startedAt?: number | null;
-      endedAt?: number | null;
-    };
-  };
-  navigation: {
-    navigate: (name: string, params?: any) => void;
-    replace: (name: string, params?: any) => void;
-  };
+type RouteCompleteParams = {
+  routeId?: string;
+  distance?: string;
+  duration?: string;
+  startedAt?: string;
+  endedAt?: string;
 };
 
-export default function RouteCompletePage({
-  route,
-  navigation,
-}: RouteCompletePageProps) {
-  const routeId = route.params?.routeId ?? null;
-  const distanceM = route.params?.distance ?? 0;
-  const durationSec = route.params?.duration ?? 0;
-  const startedAt = route.params?.startedAt ?? null;
-  const endedAt = route.params?.endedAt ?? null;
+export default function RouteCompletePage() {
+  const router = useRouter();
+  const params = useLocalSearchParams<RouteCompleteParams>();
+
+  const routeId = params.routeId ? Number(params.routeId) : null;
+  const distanceM = params.distance ? Number(params.distance) : 0;
+  const durationSec = params.duration ? Number(params.duration) : 0;
+  const startedAt = params.startedAt ? Number(params.startedAt) : null;
+  const endedAt = params.endedAt ? Number(params.endedAt) : null;
 
   const [title, setTitle] = useState("");
   const [review, setReview] = useState("");
@@ -78,44 +70,46 @@ export default function RouteCompletePage({
     }, [distanceM, durationSec, startedAt, endedAt]);
 
   const handleSave = async () => {
-    if (!routeId) {
-      Alert.alert("알림", "routeId 정보가 없어 저장할 수 없습니다.");
-      return;
-    }
-
+    // 일단 routeId 없어도 저장 가능하도록 (흐름 우선)
     if (!title.trim() || !review.trim()) {
       Alert.alert("알림", "제목과 코스 리뷰를 입력해 주세요.");
       return;
     }
 
     try {
-      const body = {
-        title: title.trim(),
-        memo: review.trim(),
-        rating,
-      };
+      // 🚧 TODO: 실제 API 연동 시 수정 필요
+      // routeId가 있을 때만 API 호출
+      if (routeId) {
+        const body = {
+          title: title.trim(),
+          memo: review.trim(),
+          rating,
+        };
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/routes/${routeId}/set-course`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+        const response = await apiClient.put(
+          `/routes/${routeId}/set-course`,
+          body
+        );
+
+        if (response.data?.success) {
+          Alert.alert("완료", "코스가 저장되었습니다.", [
+            {
+              text: "확인",
+              onPress: () => router.replace("/(tabs)/home"),
+            },
+          ]);
+        } else {
+          console.warn("코스 저장 실패 응답:", response.data);
+          Alert.alert("오류", "코스를 저장하는 중 문제가 발생했습니다.");
         }
-      );
-
-      const json = await res.json();
-
-      if (json?.success) {
-        Alert.alert("완료", "코스가 저장되었습니다.", [
+      } else {
+        // routeId 없으면 로컬 저장 또는 임시 처리
+        Alert.alert("완료", "코스가 임시 저장되었습니다.", [
           {
             text: "확인",
-            onPress: () => navigation.replace("Home"),
+            onPress: () => router.replace("/(tabs)/home"),
           },
         ]);
-      } else {
-        console.warn("코스 저장 실패 응답:", json);
-        Alert.alert("오류", "코스를 저장하는 중 문제가 발생했습니다.");
       }
     } catch (err) {
       console.warn("코스 저장 API 오류:", err);
@@ -124,7 +118,7 @@ export default function RouteCompletePage({
   };
 
   const handleSkip = () => {
-    navigation.replace("Home");
+    router.replace("/(tabs)/home");
   };
 
   return (
@@ -138,7 +132,9 @@ export default function RouteCompletePage({
       <View style={styles.section}>
         <Text style={styles.label}>사진 업로드 (선택)</Text>
         <View style={styles.uploadBox}>
-          <Text style={styles.uploadText}>사진 업로드 버튼 자리 (추후 구현)</Text>
+          <Text style={styles.uploadText}>
+            사진 업로드 버튼 자리 (추후 구현)
+          </Text>
         </View>
       </View>
 
@@ -172,7 +168,7 @@ export default function RouteCompletePage({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>코스 리뷰 · 코스 리뷰</Text>
+        <Text style={styles.label}>코스 리뷰</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="텍스트를 입력해 주세요."
