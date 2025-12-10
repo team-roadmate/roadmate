@@ -1,4 +1,3 @@
-// app/(tabs)/detail_record.tsx
 import RecordMapPreview from "@/src/components/RecordMapPreview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -49,7 +48,11 @@ export default function DetailRecord() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { deleteRoute } = useRouteStore();
+  const deleteRoute = useRouteStore((state) => state.deleteRoute);
+  const setCurrentPathResult = useRouteStore(
+    (state) => state.setCurrentPathResult
+  );
+  const setLoopPathResult = useRouteStore((state) => state.setLoopPathResult);
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -146,15 +149,71 @@ export default function DetailRecord() {
       }
       return [];
     } catch (e) {
+      console.error("PathData 파싱 실패:", e);
       return [];
     }
   };
 
   const pathNodes = parsePathData(routeData?.pathData);
 
+  const handleStartRoute = () => {
+    if (!routeData) {
+      Alert.alert("경로 데이터 없음", "산책을 시작할 수 없습니다.");
+      return;
+    }
+
+    const path = parsePathData(routeData.pathData);
+    if (path.length < 2) {
+      Alert.alert("경로 데이터 부족", "유효한 경로 데이터가 없습니다.");
+      return;
+    }
+
+    const isOngoing = routeData.status === "STARTED";
+    const routeStatus = isOngoing ? "진행 중" : "완료/취소된";
+    const buttonText = isOngoing ? "재개" : "다시 시작";
+
+    Alert.alert(
+      `${routeStatus} 산책 ${buttonText}`,
+      isOngoing
+        ? `Route ID ${routeData.routeId}번 산책을 이어서 재개하시겠습니까?`
+        : "이 경로를 사용하여 새로운 산책을 시작하시겠습니까?",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: `${buttonText}하기`,
+          onPress: () => {
+            const totalDistance =
+              (routeData.distance || routeData.expectedDistance) ?? 0;
+            const pathResult = { totalDistance, path };
+
+            setCurrentPathResult(pathResult);
+            setLoopPathResult(null);
+
+            // 상태 반영 후 라우트 이동 (React 상태 반영 보장)
+            setTimeout(() => {
+              router.push({
+                pathname: "/(guide)/route-guide",
+                params: {
+                  routeId: isOngoing ? String(routeData.routeId) : undefined,
+                  routeType: "shortest",
+                },
+              });
+            }, 50);
+
+            console.log(
+              `[경로 시작] ${routeStatus} 경로 ${routeData.routeId}번 ${buttonText}`
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  const isOngoing = routeData?.status === "STARTED";
+  const startButtonText = isOngoing ? "산책 재개" : "경로 다시 시작";
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* 헤더 */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>‹</Text>
@@ -165,7 +224,6 @@ export default function DetailRecord() {
         </TouchableOpacity>
       </View>
 
-      {/* 로딩 및 에러 처리 */}
       {isLoading && (
         <ActivityIndicator
           style={{ marginVertical: 40 }}
@@ -173,17 +231,14 @@ export default function DetailRecord() {
           color="#4CAF50"
         />
       )}
-
       {error && (
         <Text style={{ color: "red", textAlign: "center", marginVertical: 20 }}>
           {error}
         </Text>
       )}
 
-      {/* 데이터 표시 */}
       {!isLoading && !error && (
         <>
-          {/* 지도/경로 이미지 자리 -> RecordMapPreview */}
           <View style={styles.mapContainer}>
             <RecordMapPreview
               path={pathNodes}
@@ -191,8 +246,17 @@ export default function DetailRecord() {
             />
           </View>
 
-          {/* 제목 + 기본 정보 */}
           <Text style={styles.title}>{detail.title}</Text>
+          <Text
+            style={[styles.memoText, { color: isOngoing ? "#FF9800" : "#555" }]}
+          >
+            상태:{" "}
+            {isOngoing
+              ? "진행 중"
+              : routeData?.status === "COMPLETED"
+              ? "완료"
+              : "취소됨"}
+          </Text>
           {detail.memo && (
             <Text style={styles.memoText}>메모: {detail.memo}</Text>
           )}
@@ -205,7 +269,6 @@ export default function DetailRecord() {
             </Text>
           </View>
 
-          {/* 태그 */}
           <View style={styles.tagRow}>
             {detail.tags.map((tag) => (
               <View key={tag} style={styles.tagPill}>
@@ -214,7 +277,6 @@ export default function DetailRecord() {
             ))}
           </View>
 
-          {/* 주요 추천 장소 */}
           <Text style={styles.sectionTitle}>주요 기반 추천 장소</Text>
           {detail.places.map((p) => (
             <Text key={p} style={styles.placeText}>
@@ -222,14 +284,8 @@ export default function DetailRecord() {
             </Text>
           ))}
 
-          {/* 경로 시작 버튼 */}
-          <TouchableOpacity
-            style={styles.startBtn}
-            onPress={() => {
-              console.log("경로 시작 버튼 클릭 (routeId:", detail.id, ")");
-            }}
-          >
-            <Text style={styles.startText}>경로 다시 시작</Text>
+          <TouchableOpacity style={styles.startBtn} onPress={handleStartRoute}>
+            <Text style={styles.startText}>{startButtonText}</Text>
           </TouchableOpacity>
         </>
       )}
@@ -250,21 +306,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     justifyContent: "space-between",
   },
-  backText: {
-    fontSize: 24,
-    marginRight: 8,
-    color: "#14194A",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#14194A",
-  },
-  deleteText: {
-    fontSize: 16,
-    color: "#D32F2F",
-    fontWeight: "600",
-  },
+  backText: { fontSize: 24, marginRight: 8, color: "#14194A" },
+  headerTitle: { fontSize: 24, fontWeight: "700", color: "#14194A" },
+  deleteText: { fontSize: 16, color: "#D32F2F", fontWeight: "600" },
   detailImage: {
     height: 220,
     backgroundColor: "#E4E7ED",
@@ -279,32 +323,16 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: 24,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#14194A",
-    marginBottom: 8,
-  },
+  title: { fontSize: 22, fontWeight: "700", color: "#14194A", marginBottom: 8 },
   memoText: {
     fontSize: 16,
     color: "#555",
     marginBottom: 16,
     fontStyle: "italic",
   },
-  infoRow: {
-    flexDirection: "row",
-    gap: 20,
-    marginBottom: 16,
-  },
-  infoText: {
-    fontSize: 14,
-    color: "#555",
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 24,
-  },
+  infoRow: { flexDirection: "row", gap: 20, marginBottom: 16 },
+  infoText: { fontSize: 14, color: "#555" },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", marginBottom: 24 },
   tagPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -314,21 +342,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
-  tagText: {
-    color: "#14194A",
-    fontSize: 12,
-  },
+  tagText: { color: "#14194A", fontSize: 12 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#14194A",
     marginBottom: 12,
   },
-  placeText: {
-    marginBottom: 12,
-    fontSize: 15,
-    color: "#444",
-  },
+  placeText: { marginBottom: 12, fontSize: 15, color: "#444" },
   startBtn: {
     marginTop: 32,
     marginBottom: 32,
@@ -338,9 +359,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#14194A",
   },
-  startText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
+  startText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
 });

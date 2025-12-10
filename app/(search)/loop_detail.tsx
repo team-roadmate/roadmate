@@ -1,6 +1,6 @@
-// app/(search)/loop_detail.tsx
+// app/(search)/loop_detail.tsx - handleStartWalk 부분만 수정
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react"; // useRef 추가
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -44,13 +44,11 @@ export default function LoopDetail() {
   const router = useRouter();
   const { loopPathResult, isLoadingLoop } = useRouteStore();
 
-  // MapView 참조를 위한 useRef 추가
   const mapRef = useRef<MapView>(null);
 
   const [detail, setDetail] = useState<LoopDetailDisplay>(initialDetail);
   const [error, setError] = useState<string | null>(null);
 
-  // 경로 데이터 로드 및 정보 계산 로직
   useEffect(() => {
     if (isLoadingLoop) return;
 
@@ -67,7 +65,6 @@ export default function LoopDetail() {
     try {
       const loop: LoopPathResponse = loopPathResult;
 
-      // 예상 시간 계산 (평균 시속 5km 기준)
       const estimatedMinutes = Math.round((loop.actualDistance / 5) * 60);
 
       const mapped: LoopDetailDisplay = {
@@ -111,7 +108,6 @@ export default function LoopDetail() {
     }
   }, [loopPathResult, isLoadingLoop]);
 
-  // 경로 전체를 보여주기 위해 맵 영역을 조정하는 함수 (추가됨)
   const fitPathToMap = () => {
     if (mapRef.current && loopPathResult?.path?.length) {
       const coordinates = loopPathResult.path.map((node) => ({
@@ -119,7 +115,6 @@ export default function LoopDetail() {
         longitude: node.longitude,
       }));
 
-      // 모든 좌표를 포함하도록 지도 영역 조정 (여백 50 픽셀 추가)
       mapRef.current.fitToCoordinates(coordinates, {
         edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
         animated: true,
@@ -127,6 +122,7 @@ export default function LoopDetail() {
     }
   };
 
+  // 산책 시작 버튼 핸들러 - route-guide로 이동
   const handleStartWalk = () => {
     if (
       !loopPathResult ||
@@ -137,17 +133,13 @@ export default function LoopDetail() {
       return;
     }
 
-    // TODO: 실제 산책 시작 화면으로 이동 (경로 데이터 전달)
-    Alert.alert("산책 시작", "루프 경로로 산책을 시작하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "시작",
-        onPress: () => {
-          console.log("루프 산책 시작:", loopPathResult);
-          // router.push("/walk_start") 등으로 이동
-        },
+    // route-guide로 이동 (루프 경로)
+    router.push({
+      pathname: "/(guide)/route-guide",
+      params: {
+        routeType: "loop",
       },
-    ]);
+    });
   };
 
   return (
@@ -156,7 +148,6 @@ export default function LoopDetail() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
-      {/* 헤더 */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>‹</Text>
@@ -165,7 +156,6 @@ export default function LoopDetail() {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* 로딩 및 에러 처리 */}
       {isLoadingLoop && (
         <ActivityIndicator
           style={{ marginVertical: 40 }}
@@ -186,39 +176,33 @@ export default function LoopDetail() {
         </View>
       )}
 
-      {/* 데이터 표시 */}
       {!isLoadingLoop && !error && (
         <>
-          {/* 지도/경로 표시 */}
           <View style={styles.mapContainer}>
             {loopPathResult?.path && loopPathResult.path.length > 0 ? (
               <MapView
-                ref={mapRef} // mapRef 연결
+                ref={mapRef}
                 provider={PROVIDER_GOOGLE}
                 style={styles.map}
                 initialRegion={{
-                  // 초기 영역은 임시로 첫 노드를 사용
                   latitude: loopPathResult.path[0].latitude,
                   longitude: loopPathResult.path[0].longitude,
                   latitudeDelta: 0.02,
                   longitudeDelta: 0.02,
                 }}
-                // 지도가 로드되면 fitPathToMap 호출
                 onLayout={fitPathToMap}
                 onMapReady={fitPathToMap}
               >
-                {/* 경로 선 (눈에 잘 띄도록 스타일 적용) */}
                 <Polyline
                   coordinates={loopPathResult.path.map((node) => ({
                     latitude: node.latitude,
                     longitude: node.longitude,
                   }))}
-                  strokeColor="#FF0000" // 루프 경로: 밝은 빨간색
-                  strokeWidth={6} // 두께 6
-                  zIndex={1} // 기본 zIndex
+                  strokeColor="#FF0000"
+                  strokeWidth={6}
+                  zIndex={1}
                 />
 
-                {/* 시작점 = 종료점 마커 */}
                 <Marker
                   coordinate={{
                     latitude: loopPathResult.path[0].latitude,
@@ -228,7 +212,6 @@ export default function LoopDetail() {
                   pinColor="green"
                 />
 
-                {/* 중간 지점 마커 (경로의 중간쯤) */}
                 {loopPathResult.path.length > 2 && (
                   <Marker
                     coordinate={{
@@ -253,7 +236,6 @@ export default function LoopDetail() {
             )}
           </View>
 
-          {/* 제목 + 기본 정보 */}
           <Text style={styles.title}>{detail.title}</Text>
 
           {detail.message && (
@@ -284,7 +266,6 @@ export default function LoopDetail() {
             </View>
           </View>
 
-          {/* 정확도 표시 */}
           <View
             style={[
               styles.accuracyBadge,
@@ -300,7 +281,6 @@ export default function LoopDetail() {
             </Text>
           </View>
 
-          {/* 구간 정보 */}
           <Text style={styles.sectionTitle}>구간별 상세 정보</Text>
           {detail.segments.map((segment, index) => (
             <View key={index} style={styles.segmentCard}>
@@ -314,7 +294,6 @@ export default function LoopDetail() {
             </View>
           ))}
 
-          {/* 경로 시작 버튼 */}
           <TouchableOpacity style={styles.startBtn} onPress={handleStartWalk}>
             <Text style={styles.startText}>루프 경로 시작하기</Text>
           </TouchableOpacity>
@@ -346,14 +325,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#14194A",
   },
-  detailImage: {
-    height: 220,
-    backgroundColor: "#E4E7ED",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
   mapContainer: {
     height: 300,
     borderRadius: 12,
@@ -376,11 +347,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 16,
     fontWeight: "600",
-  },
-  imageSubText: {
-    color: "#999",
-    fontSize: 14,
-    marginTop: 8,
   },
   title: {
     fontSize: 22,

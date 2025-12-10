@@ -1,6 +1,6 @@
 // app/(search)/path_detail.tsx
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react"; // useRef 추가
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -34,7 +34,6 @@ export default function PathDetail() {
   const router = useRouter();
   const { currentPathResult, isLoadingPath } = useRouteStore();
 
-  // MapView 참조를 위한 useRef 추가
   const mapRef = useRef<MapView>(null);
 
   const [detail, setDetail] = useState<PathDetailDisplay>(initialDetail);
@@ -57,10 +56,7 @@ export default function PathDetail() {
     try {
       const path: PathResult = currentPathResult;
 
-      // 거리를 km로 변환 (미터 → km)
       const distanceKm = path.totalDistance / 1000;
-
-      // 예상 시간 계산 (평균 시속 5km 기준)
       const estimatedMinutes = Math.round((distanceKm / 5) * 60);
 
       const mapped: PathDetailDisplay = {
@@ -80,16 +76,13 @@ export default function PathDetail() {
     }
   }, [currentPathResult, isLoadingPath]);
 
-  // 경로 전체를 보여주기 위해 맵 영역을 조정하는 함수
   const fitPathToMap = () => {
     if (mapRef.current && currentPathResult?.path?.length) {
-      // 경로 좌표 매핑
       const coordinates = currentPathResult.path.map((node) => ({
         latitude: node.latitude,
         longitude: node.longitude,
       }));
 
-      // 모든 좌표를 포함하도록 지도 영역 조정 (여백 50 픽셀 추가)
       mapRef.current.fitToCoordinates(coordinates, {
         edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
         animated: true,
@@ -97,7 +90,7 @@ export default function PathDetail() {
     }
   };
 
-  // 산책 시작 버튼 핸들러
+  // 산책 시작 버튼 핸들러 - route-guide로 이동
   const handleStartWalk = () => {
     if (
       !currentPathResult ||
@@ -108,20 +101,15 @@ export default function PathDetail() {
       return;
     }
 
-    // TODO: 실제 산책 시작 화면으로 이동 (경로 데이터 전달)
-    Alert.alert("산책 시작", "이 경로로 산책을 시작하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "시작",
-        onPress: () => {
-          console.log("최단 경로 산책 시작:", currentPathResult);
-          // router.push("/walk_start") 등으로 이동
-        },
+    // route-guide로 이동 (최단 경로)
+    router.push({
+      pathname: "/(guide)/route-guide",
+      params: {
+        routeType: "shortest",
       },
-    ]);
+    });
   };
 
-  // 맵 뷰 렌더링
   return (
     <ScrollView
       style={styles.container}
@@ -165,33 +153,28 @@ export default function PathDetail() {
           <View style={styles.mapContainer}>
             {currentPathResult?.path && currentPathResult.path.length > 0 ? (
               <MapView
-                ref={mapRef} // mapRef 연결
+                ref={mapRef}
                 provider={PROVIDER_GOOGLE}
                 style={styles.map}
                 initialRegion={{
-                  // 초기 영역은 임시로 첫 노드를 사용
                   latitude: currentPathResult.path[0].latitude,
                   longitude: currentPathResult.path[0].longitude,
                   latitudeDelta: 0.01,
                   longitudeDelta: 0.01,
                 }}
-                // 지도가 로드되면 fitPathToMap 호출
                 onLayout={fitPathToMap}
-                // 지도가 로드된 후에도 fitPathToMap 호출 (선택 사항)
                 onMapReady={fitPathToMap}
               >
-                {/* 경로 선 */}
                 <Polyline
                   coordinates={currentPathResult.path.map((node) => ({
                     latitude: node.latitude,
                     longitude: node.longitude,
                   }))}
-                  strokeColor="#00FF00" // 현재 경로: 밝은 녹색
-                  strokeWidth={6} // 두께 6
-                  zIndex={2} // zIndex 2
+                  strokeColor="#00FF00"
+                  strokeWidth={6}
+                  zIndex={2}
                 />
 
-                {/* 시작점 마커 */}
                 <Marker
                   coordinate={{
                     latitude: currentPathResult.path[0].latitude,
@@ -201,7 +184,6 @@ export default function PathDetail() {
                   pinColor="green"
                 />
 
-                {/* 도착점 마커 */}
                 <Marker
                   coordinate={{
                     latitude:
@@ -222,7 +204,6 @@ export default function PathDetail() {
             )}
           </View>
 
-          {/* 제목 + 기본 정보 */}
           <Text style={styles.title}>{detail.title}</Text>
 
           <View style={styles.descriptionContainer}>
@@ -253,7 +234,6 @@ export default function PathDetail() {
             </View>
           </View>
 
-          {/* 경로 특징 */}
           <Text style={styles.sectionTitle}>경로 특징</Text>
           <View style={styles.featureCard}>
             <View style={styles.featureItem}>
@@ -276,7 +256,6 @@ export default function PathDetail() {
             </View>
           </View>
 
-          {/* 안내 사항 */}
           <View style={styles.noticeContainer}>
             <Text style={styles.noticeTitle}>💡 산책 팁</Text>
             <Text style={styles.noticeText}>
@@ -285,7 +264,6 @@ export default function PathDetail() {
             </Text>
           </View>
 
-          {/* 경로 시작 버튼 */}
           <TouchableOpacity style={styles.startBtn} onPress={handleStartWalk}>
             <Text style={styles.startText}>경로 시작하기</Text>
           </TouchableOpacity>
@@ -317,14 +295,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#14194A",
   },
-  detailImage: {
-    height: 220,
-    backgroundColor: "#E4E7ED",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
   mapContainer: {
     height: 300,
     borderRadius: 12,
@@ -347,11 +317,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 16,
     fontWeight: "600",
-  },
-  imageSubText: {
-    color: "#999",
-    fontSize: 14,
-    marginTop: 8,
   },
   title: {
     fontSize: 22,

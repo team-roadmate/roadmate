@@ -113,8 +113,8 @@ export default function HomeScreen() {
           />
         </View>
 
-        <Text style={styles.sectionTitle}>테마별 추천 코스</Text>
-        <Text style={styles.placeholderText}>(API 부족으로 구현 생략)</Text>
+        {/* <Text style={styles.sectionTitle}>테마별 추천 코스</Text>
+        <Text style={styles.placeholderText}>(API 부족으로 구현 생략)</Text> */}
 
         <RecentActivityList
           history={recentHistory}
