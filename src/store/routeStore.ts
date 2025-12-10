@@ -1,10 +1,10 @@
 // src/store/routeStore.ts
 import { create } from "zustand";
 import { dataService } from "../services/data.service";
-import { LoopPathService } from "../services/loopPath.service"; // LoopPathService 임포트
+import { LoopPathService } from "../services/loopPath.service";
 import { PathfindingService } from "../services/pathfinding.service";
 import {
-  LoopEstimateRequest, // 루프 경로 타입 임포트
+  LoopEstimateRequest,
   LoopEstimateResponse,
   LoopPathRequest,
   LoopPathResponse,
@@ -16,34 +16,31 @@ import {
   WalkRouteStartRequest,
 } from "../types/data.types";
 
+// PathResult, LoopPathResponse를 직접 설정하는 액션 추가 (DetailRecord에서 필요)
 interface RouteState {
   // 🏞️ 경로 탐색 관련 상태
   currentPathResult: PathResult | null;
-  isLoadingPath: boolean;
+  isLoadingPath: boolean; // 🔄 루프 경로 관련 상태 (신규)
 
-  // 🔄 루프 경로 관련 상태 (신규)
   loopEstimateResult: LoopEstimateResponse | null;
   loopPathResult: LoopPathResponse | null;
-  isLoadingLoop: boolean;
+  isLoadingLoop: boolean; // 🚶 주행/기록 관련 상태
 
-  // 🚶 주행/기록 관련 상태
   activeRouteId: number | null;
-  isWalking: boolean;
+  isWalking: boolean; // 📜 기록 관련 상태
 
-  // 📜 기록 관련 상태
   historyList: WalkRoute[];
   courseList: WalkRoute[];
   isLoadingHistory: boolean;
-  error: string | null;
+  error: string | null; // 🏞️ 경로 탐색 액션
 
-  // 🏞️ 경로 탐색 액션
-  searchShortestPath: (request: PathRequest) => Promise<void>;
+  searchShortestPath: (request: PathRequest) => Promise<void>; // 👇 DetailRecord.tsx에서 사용하기 위해 추가된 액션입니다.
+  setCurrentPathResult: (result: PathResult | null) => void; // 🔄 루프 경로 액션 (신규)
 
-  // 🔄 루프 경로 액션 (신규)
   estimateLoop: (request: LoopEstimateRequest) => Promise<void>;
-  generateLoop: (request: LoopPathRequest) => Promise<void>;
+  generateLoop: (request: LoopPathRequest) => Promise<void>; // 👇 DetailRecord.tsx에서 사용하기 위해 추가된 액션입니다.
+  setLoopPathResult: (result: LoopPathResponse | null) => void; // 🚶 주행/기록 관련 액션 (이전과 동일)
 
-  // 🚶 주행/기록 관련 액션 (이전과 동일)
   startWalk: (request: WalkRouteStartRequest) => Promise<number>;
   completeWalk: (
     routeId: number,
@@ -60,22 +57,19 @@ interface RouteState {
 export const useRouteStore = create<RouteState>((set, get) => ({
   // 🏞️ 경로 탐색 상태 초기화
   currentPathResult: null,
-  isLoadingPath: false,
+  isLoadingPath: false, // 🔄 루프 경로 상태 초기화 (신규)
 
-  // 🔄 루프 경로 상태 초기화 (신규)
   loopEstimateResult: null,
   loopPathResult: null,
-  isLoadingLoop: false,
+  isLoadingLoop: false, // 🚶 주행/기록 상태 초기화
 
-  // 🚶 주행/기록 상태 초기화
   activeRouteId: null,
   isWalking: false,
   historyList: [],
   courseList: [],
   isLoadingHistory: false,
-  error: null,
+  error: null, // 🏞️ 경로 탐색 로직 (유지)
 
-  // 🏞️ 경로 탐색 로직 (유지)
   searchShortestPath: async (request) => {
     set({ isLoadingPath: true, error: null, currentPathResult: null });
     try {
@@ -96,11 +90,10 @@ export const useRouteStore = create<RouteState>((set, get) => ({
         isLoadingPath: false,
       });
     }
-  },
+  }, // 👇 DetailRecord.tsx에서 사용하기 위해 추가된 액션입니다.
 
-  // 🔄 루프 경로 액션 (신규 추가)
+  setCurrentPathResult: (result) => set({ currentPathResult: result }), // 🔄 루프 경로 액션 (신규 추가) // 1차 계산: 루프 경로 예상 계산
 
-  // 1차 계산: 루프 경로 예상 계산
   estimateLoop: async (request) => {
     set({
       isLoadingLoop: true,
@@ -114,20 +107,18 @@ export const useRouteStore = create<RouteState>((set, get) => ({
       set({
         loopEstimateResult: response,
         isLoadingLoop: false,
-        error: null, // API 응답 본문에 메시지가 있더라도 성공으로 간주
+        error: null,
       });
     } catch (error: any) {
       set({
         error: error.message || "루프 경로 예상 계산 중 오류 발생",
         isLoadingLoop: false,
         loopEstimateResult: null,
-      });
-      // 컴포넌트에서 Alert을 띄울 수 있도록 에러를 다시 던집니다.
+      }); // 컴포넌트에서 Alert을 띄울 수 있도록 에러를 다시 던집니다.
       throw error;
     }
-  },
+  }, // 2차 생성: 루프 산책 경로 생성
 
-  // 2차 생성: 루프 산책 경로 생성
   generateLoop: async (request) => {
     set({ isLoadingLoop: true, error: null, loopPathResult: null });
     try {
@@ -145,8 +136,7 @@ export const useRouteStore = create<RouteState>((set, get) => ({
           loopPathResult: response, // 실패 메시지를 포함할 수 있음
           isLoadingLoop: false,
           error: response.message || "루프 경로 생성에 실패했습니다.",
-        });
-        // 경로가 없거나 메시지가 오류를 나타낼 경우 에러를 던져 컴포넌트에서 Alert 처리
+        }); // 경로가 없거나 메시지가 오류를 나타낼 경우 에러를 던져 컴포넌트에서 Alert 처리
         throw new Error(response.message || "루프 경로 생성에 실패했습니다.");
       }
     } catch (error: any) {
@@ -157,9 +147,9 @@ export const useRouteStore = create<RouteState>((set, get) => ({
       });
       throw error;
     }
-  },
+  }, // 👇 DetailRecord.tsx에서 사용하기 위해 추가된 액션입니다.
 
-  // 🚶 주행/기록 관련 액션 (이전과 동일)
+  setLoopPathResult: (result) => set({ loopPathResult: result }), // 🚶 주행/기록 관련 액션 (이전과 동일)
 
   startWalk: async (request) => {
     set({ isWalking: true, error: null, activeRouteId: null });
