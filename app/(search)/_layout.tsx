@@ -18,7 +18,8 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="search" />
-        <Stack.Screen name="list" />
+        <Stack.Screen name="loop_detail" />
+        <Stack.Screen name="path_detail" />
       </Stack>
     </>
   );

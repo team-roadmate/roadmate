@@ -102,20 +102,28 @@ export const useRouteStore = create<RouteState>((set, get) => ({
 
   // 1차 계산: 루프 경로 예상 계산
   estimateLoop: async (request) => {
-    set({ isLoadingLoop: true, error: null, loopEstimateResult: null });
+    set({
+      isLoadingLoop: true,
+      error: null,
+      loopEstimateResult: null,
+      loopPathResult: null,
+    });
     try {
       const response = await LoopPathService.estimateLoop(request);
 
       set({
         loopEstimateResult: response,
         isLoadingLoop: false,
-        error: response.message || null, // 메시지가 있으면 에러 대신 안내 메시지로 처리 가능
+        error: null, // API 응답 본문에 메시지가 있더라도 성공으로 간주
       });
     } catch (error: any) {
       set({
         error: error.message || "루프 경로 예상 계산 중 오류 발생",
         isLoadingLoop: false,
+        loopEstimateResult: null,
       });
+      // 컴포넌트에서 Alert을 띄울 수 있도록 에러를 다시 던집니다.
+      throw error;
     }
   },
 
@@ -125,8 +133,6 @@ export const useRouteStore = create<RouteState>((set, get) => ({
     try {
       const response = await LoopPathService.generateLoop(request);
 
-      // 컨트롤러에서 목표 거리가 0이하일 때 badRequest를 반환하므로 try-catch로 잡히지 않을 수 있음.
-      // 200 OK 응답 본문에 메시지가 포함된 경우를 처리
       if (response.path && response.path.length > 0) {
         set({
           loopPathResult: response,
@@ -140,12 +146,16 @@ export const useRouteStore = create<RouteState>((set, get) => ({
           isLoadingLoop: false,
           error: response.message || "루프 경로 생성에 실패했습니다.",
         });
+        // 경로가 없거나 메시지가 오류를 나타낼 경우 에러를 던져 컴포넌트에서 Alert 처리
+        throw new Error(response.message || "루프 경로 생성에 실패했습니다.");
       }
     } catch (error: any) {
       set({
         error: error.message || "루프 경로 생성 중 오류 발생",
         isLoadingLoop: false,
+        loopPathResult: null,
       });
+      throw error;
     }
   },
 
