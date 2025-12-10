@@ -28,6 +28,7 @@ export default function RouteGuideScreen() {
   const params = useLocalSearchParams<RouteParams>();
   const { currentPathResult, loopPathResult } = useRouteStore();
 
+  // ✅ [수정 1] URL 파라미터에서 routeId 초기값 가져오기 (재개 시 사용)
   const initialRouteId = params.routeId ?? null;
   const routeType = params.routeType || "shortest";
 
@@ -38,6 +39,7 @@ export default function RouteGuideScreen() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showEndModal, setShowEndModal] = useState(false);
+  // ✅ [수정 2] routeId 상태를 파라미터 값으로 초기화
   const [routeId, setRouteId] = useState<string | null>(initialRouteId);
 
   const [simulatedLocation, setSimulatedLocation] = useState<{
@@ -48,9 +50,9 @@ export default function RouteGuideScreen() {
     lng: 126.887,
   });
   const [walkStartTime, setWalkStartTime] = useState<number | null>(null);
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(1); // 배속
   const arrivedRef = useRef(false);
-  const mapRef = useRef<MapView | null>(null);
+  const mapRef = useRef<MapView | null>(null); // mapRef 초기값 수정
 
   const startedRef = useRef(false);
 
@@ -84,55 +86,9 @@ export default function RouteGuideScreen() {
     }, 0);
   };
 
-  // -----------------------------
-  // ★ 방향 각도 계산 함수 추가
-  // -----------------------------
-  const getHeading = (
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-  ) => {
-    const toRad = (x: number) => (x * Math.PI) / 180;
-    const toDeg = (x: number) => (x * 180) / Math.PI;
-
-    const dLon = toRad(lng2 - lng1);
-
-    const y = Math.sin(dLon) * Math.cos(toRad(lat2));
-    const x =
-      Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
-
-    let brng = toDeg(Math.atan2(y, x));
-    return (brng + 360) % 360;
-  };
-
-  // -------------------------------------
-  // ★ 자연스러운 방향 텍스트 계산 함수
-  // -------------------------------------
-  const getDirectionText = () => {
-    if (currentIndex === 0 || currentIndex >= waypoints.length - 1)
-      return "직진";
-
-    const prev = waypoints[currentIndex - 1];
-    const current = waypoints[currentIndex];
-    const next = waypoints[currentIndex + 1];
-
-    const heading1 = getHeading(prev.lat, prev.lng, current.lat, current.lng);
-    const heading2 = getHeading(current.lat, current.lng, next.lat, next.lng);
-
-    let diff = heading2 - heading1;
-    if (diff > 180) diff -= 360;
-    if (diff < -180) diff += 360;
-
-    const THRESHOLD = 20;
-
-    if (diff > THRESHOLD) return "우회전";
-    if (diff < -THRESHOLD) return "좌회전";
-    return "직진";
-  };
-
+  // ✅ [수정 3] 산책 시작 API 호출 함수 (routeId가 null일 때만 호출)
   const startWalk = async () => {
+    // totalDistance는 PathResult에만 있고, LoopPathResponse에는 actualDistance가 있습니다.
     const distanceMeters =
       routeType === "loop" && loopPathResult?.actualDistance !== undefined
         ? loopPathResult.actualDistance * 1000
@@ -143,6 +99,7 @@ export default function RouteGuideScreen() {
       return;
     }
 
+    // 만약 이미 routeId가 설정되어 있다면 (재개 상황), API 호출을 스킵합니다.
     if (routeId) {
       console.log(
         `[산책 재개] 기존 routeId ${routeId}로 시작합니다. API 호출 스킵.`
@@ -151,6 +108,7 @@ export default function RouteGuideScreen() {
     }
 
     try {
+      // 1. 요청 데이터 준비
       const expectedDistance = Math.round(distanceMeters);
       const expectedDuration = Math.round(expectedDistance / 1.5);
       const pathDataJson = JSON.stringify(pathData);
@@ -161,19 +119,28 @@ export default function RouteGuideScreen() {
         pathData: pathDataJson,
       };
 
+      // 2. 산책 시작 API 호출
+      // 서버는 { success: true, data: routeId } 형태의 객체를 반환한다고 가정
       const response = await dataService.startWalk(request);
+
+      // 3. 획득한 응답 객체에서 실제 routeId 값 (number) 추출 (오류 해결)
       const actualRouteId = response?.data;
 
-      if (typeof actualRouteId !== "number") {
-        console.error("Route ID 형식 오류:", response);
+      if (typeof actualRouteId !== "number" || actualRouteId === undefined) {
+        console.error(
+          "Route ID를 응답에서 찾을 수 없거나 형식이 올바르지 않습니다:",
+          response
+        );
         setRouteId(null);
         return;
       }
 
       setRouteId(String(actualRouteId));
-      console.log(`[API 호출 성공] startWalk → routeId: ${actualRouteId}`);
+      console.log(
+        `[API 호출 성공] 산책 시작. 획득한 routeId: ${actualRouteId}`
+      );
     } catch (error) {
-      console.error("산책 시작 API 오류:", error);
+      console.error("산책 시작 API 호출 중 오류 발생:", error);
     }
   };
 
@@ -181,6 +148,7 @@ export default function RouteGuideScreen() {
     if (startedRef.current) return;
 
     if (!pathData || pathData.length === 0) {
+      // pathData가 없을 경우 더미 경로 시뮬레이션
       const baseLat = simulatedLocation.lat;
       const baseLng = simulatedLocation.lng;
       const dummyWaypoints = [
@@ -197,10 +165,12 @@ export default function RouteGuideScreen() {
       setWalkStartTime(Date.now());
       setLoading(false);
       startedRef.current = true;
+      // 더미 경로의 경우 routeId는 null로 유지 (API 호출 안함)
       return;
     }
 
-    const waypointsMapped: Waypoint[] = pathData.map(
+    // 실제 경로 데이터 설정
+    const waypoints: Waypoint[] = pathData.map(
       (node: PathNode, idx: number) => ({
         name:
           idx === 0
@@ -212,26 +182,27 @@ export default function RouteGuideScreen() {
         lng: node.longitude,
       })
     );
-
-    setWaypoints(waypointsMapped);
-    setSimulatedLocation({
-      lat: waypointsMapped[0].lat,
-      lng: waypointsMapped[0].lng,
-    });
+    setWaypoints(waypoints);
+    setSimulatedLocation({ lat: waypoints[0].lat, lng: waypoints[0].lng });
     setWalkStartTime(Date.now());
     setLoading(false);
     startedRef.current = true;
 
+    // ✅ [수정 4] 경로 데이터 준비가 완료되면 산책 시작/재개 로직 실행
     startWalk();
   }, [routeType, currentPathResult, loopPathResult]);
 
+  // ✅ [수정 5] finishWalk 함수 (routeId 사용 로직 안정화됨)
   const finishWalk = async (
     id: string | null,
     distance: number,
     duration: number
   ) => {
-    if (!id || isNaN(Number(id))) {
-      console.warn("routeId가 유효하지 않음. 완료 API 스킵.");
+    if (!id || id.length === 0 || isNaN(Number(id))) {
+      console.warn(
+        "경로 ID가 유효하지 않아 산책 완료 API를 호출하지 않습니다.",
+        id
+      );
       return;
     }
 
@@ -245,13 +216,14 @@ export default function RouteGuideScreen() {
     try {
       await dataService.completeWalk(routeIdNumber, requestBody);
       console.log(
-        `[API 성공] completeWalk → routeId ${routeIdNumber}, distance ${requestBody.distance}, duration ${requestBody.duration}`
+        `[API 호출 성공] 경로 ID ${routeIdNumber} 산책 완료: 거리 ${requestBody.distance}m, 시간 ${requestBody.duration}초`
       );
     } catch (error) {
-      console.error("산책 완료 API 오류:", error);
+      console.error("산책 완료 API 호출 중 오류 발생:", error);
     }
   };
 
+  // ───────── 자동 이동 시뮬레이션 ─────────
   useEffect(() => {
     if (!waypoints || waypoints.length === 0) return;
 
@@ -277,6 +249,7 @@ export default function RouteGuideScreen() {
             ? (now - walkStartTime) / 1000
             : 0;
 
+          // 산책 완료 API 호출
           finishWalk(routeId, totalDistance, totalDurationSec);
 
           router.replace({
@@ -293,7 +266,8 @@ export default function RouteGuideScreen() {
         return;
       }
 
-      const step = 0.00001 * speed;
+      // 속도 적용 이동
+      const step = 0.00001 * speed; // 단순 보정
       const latStep = target.lat > simulatedLocation.lat ? step : -step;
       const lngStep = target.lng > simulatedLocation.lng ? step : -step;
 
@@ -307,8 +281,7 @@ export default function RouteGuideScreen() {
             ? target.lng
             : loc.lng + lngStep,
       }));
-    }, 100);
-
+    }, 100); // 0.1초마다 이동
     return () => clearInterval(interval);
   }, [
     waypoints,
@@ -329,6 +302,11 @@ export default function RouteGuideScreen() {
       )
     : Infinity;
 
+  const getDirectionText = () => {
+    if (currentIndex === 0 || currentIndex === waypoints.length - 1)
+      return "직진";
+    return currentIndex % 2 === 0 ? "좌회전" : "우회전";
+  };
   const directionText = getDirectionText();
 
   const headerCrumbs = waypoints.map((wp, idx) =>
@@ -389,7 +367,6 @@ export default function RouteGuideScreen() {
             title="현재 위치"
           />
         </MapView>
-
         <View style={styles.arrowWrapper}>
           <DirectionArrow
             direction={
