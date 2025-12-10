@@ -9,16 +9,19 @@ import {
   View,
 } from "react-native";
 import { recordStyles as s } from "../styles/record.styles";
+import RecordMapPreview from "./RecordMapPreview"; // 맵 프리뷰 컴포넌트 임포트
 
+// RecordItem 타입에 경로 정보 추가
 export type RecordItem = {
-  id: string;
+  id: string; // routeId
   title: string;
   distance: string;
   duration: string;
   difficulty: string;
   tags: string[];
   rating: number;
-  // ❌ likes 제거됨
+  // 경로 데이터를 추가합니다.
+  path: { latitude: number; longitude: number }[];
 };
 
 type Props = {
@@ -45,7 +48,7 @@ export default function RecordList({
         <TouchableOpacity
           onPress={() => (backTo ? router.push(backTo) : router.back())}
         >
-          <Text style={s.backText}>‹</Text>
+          <Text style={s.backText}>←</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>{screenTitle}</Text>
       </View>
@@ -87,10 +90,11 @@ export default function RecordList({
       {!isLoading &&
         items.map((item) => (
           <View key={item.id} style={s.card}>
-            {/* 이미지 영역 */}
-            <View style={s.cardImage}>
-              <Text style={s.imageText}>이미지</Text>
-            </View>
+            {/* 이미지 영역 대신 MapView 프리뷰 컴포넌트 사용 */}
+            <RecordMapPreview
+              path={item.path}
+              mapHeight={s.cardImage.height} // 기존 이미지 스타일 높이 재사용
+            />
 
             <View style={s.cardBody}>
               <Text style={s.courseTitle}>{item.title}</Text>
@@ -123,7 +127,7 @@ export default function RecordList({
                   onPress={() =>
                     router.push({
                       pathname: "/detail_record",
-                      params: { routeId: item.id },
+                      params: { routeId: item.id }, // item.id를 routeId로 전달
                     })
                   }
                 >

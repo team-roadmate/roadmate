@@ -1,4 +1,5 @@
 // app/(tabs)/detail_record.tsx
+import RecordMapPreview from "@/src/components/RecordMapPreview";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -12,7 +13,7 @@ import {
 } from "react-native";
 import { dataService } from "../../src/services/data.service";
 import { useRouteStore } from "../../src/store/routeStore";
-import { WalkRoute } from "../../src/types/data.types";
+import { PathNode, WalkRoute } from "../../src/types/data.types";
 
 interface DetailDisplayData {
   id: string;
@@ -44,6 +45,7 @@ export default function DetailRecord() {
   const routeId = routeIdParam ? Number(routeIdParam) : null;
 
   const [detail, setDetail] = useState<DetailDisplayData>(initialDetail);
+  const [routeData, setRouteData] = useState<WalkRoute | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,17 +63,15 @@ export default function DetailRecord() {
       setError(null);
 
       try {
-        // 🔧 수정: response는 ApiResponse<WalkRoute> 구조
         const response = await dataService.getRouteById(routeId);
 
-        // 🔧 수정: response.success 체크 및 response.data 사용
         if (!response.success || !response.data) {
           throw new Error(response.message || "기록을 찾을 수 없습니다.");
         }
 
         const found: WalkRoute = response.data;
+        setRouteData(found);
 
-        // 날짜를 "MM월 DD일 산책" 형식으로 변환
         const formatDateTitle = (dateString: string): string => {
           try {
             const date = new Date(dateString);
@@ -106,6 +106,7 @@ export default function DetailRecord() {
         setError(err.message || "기록을 불러오는 중 오류 발생.");
         setDetail(initialDetail);
         setIsLoading(false);
+        setRouteData(null);
       }
     };
 
@@ -133,6 +134,24 @@ export default function DetailRecord() {
     ]);
   };
 
+  const parsePathData = (pathData: string | undefined): PathNode[] => {
+    if (!pathData) return [];
+    try {
+      const parsedData = JSON.parse(pathData);
+      if (
+        Array.isArray(parsedData) &&
+        parsedData.every((item) => "latitude" in item && "longitude" in item)
+      ) {
+        return parsedData as PathNode[];
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const pathNodes = parsePathData(routeData?.pathData);
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
@@ -154,6 +173,7 @@ export default function DetailRecord() {
           color="#4CAF50"
         />
       )}
+
       {error && (
         <Text style={{ color: "red", textAlign: "center", marginVertical: 20 }}>
           {error}
@@ -163,9 +183,12 @@ export default function DetailRecord() {
       {/* 데이터 표시 */}
       {!isLoading && !error && (
         <>
-          {/* 지도/경로 이미지 자리 */}
-          <View style={styles.detailImage}>
-            <Text style={styles.imageText}>경로 지도(목업)</Text>
+          {/* 지도/경로 이미지 자리 -> RecordMapPreview */}
+          <View style={styles.mapContainer}>
+            <RecordMapPreview
+              path={pathNodes}
+              mapHeight={styles.detailImage.height}
+            />
           </View>
 
           {/* 제목 + 기본 정보 */}
@@ -204,7 +227,6 @@ export default function DetailRecord() {
             style={styles.startBtn}
             onPress={() => {
               console.log("경로 시작 버튼 클릭 (routeId:", detail.id, ")");
-              // TODO: 실제 경로 시작 화면으로 연결
             }}
           >
             <Text style={styles.startText}>경로 다시 시작</Text>
@@ -251,8 +273,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 24,
   },
-  imageText: {
-    color: "#666",
+  mapContainer: {
+    height: 220,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 24,
   },
   title: {
     fontSize: 22,
