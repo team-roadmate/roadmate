@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   LOGIN: "/api/auth/login",
   SIGNUP: "/api/auth/signup",
   REFRESH: "/api/auth/refresh",
+  SHORTEST_PATH: "/api/path/shortest",
 
   // 홈 화면 데이터 관련 (추가)
   WEATHER_CURRENT: "/api/weather/current", // GET: 현재 날씨 (쿼리 파라미터 필요)
