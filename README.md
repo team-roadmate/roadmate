@@ -1,50 +1,61 @@
-# Expo 앱에 오신 것을 환영합니다 👋
+# 🗺️ 로드메이트 (RoadMate) - 프론트엔드
 
-이 프로젝트는 [`create-expo-app`](https://www.npmjs.com/package/create-expo-app)으로 생성된 [Expo](https://expo.dev) 프로젝트입니다.
+> **"당신의 산책이 즐거워지는 순간"** > 서울시 도보네트워크 공공데이터를 활용한 실시간 산책 경로 안내 어플리케이션
 
-## 시작하기
+---
 
-1. 의존성 설치
+## 📝 프로젝트 소개
+**로드메이트(RoadMate)**는 목적지까지의 최단 거리 안내는 물론, 산책의 즐거움을 더하기 위한 **타원형 루프 경로** 추천 기능을 제공하는 산책 특화 서비스입니다. 서울시의 정밀한 도보 네트워크 데이터를 기반으로 안전하고 편리한 보행 경로를 실시간으로 안내합니다.
 
-   ```bash
-   npm install
-   ```
+본 프로젝트는 **'공공데이터를 활용한 웹서버 개발대회'** 참여 작품입니다.
 
-2. 앱 실행
+## ✨ 주요 기능
+- **📍 정밀 보행 경로 안내**: 서울시 도보네트워크 데이터를 활용한 상세 경로 탐색
+- **🔄 맞춤형 루프 경로**: 사용자 위치 기반의 타원형 산책 루프 경로 생성 및 제안
+- **🧭 실시간 네비게이션**: `expo-location`을 활용한 사용자 실시간 위치 추적 및 안내
+- **🌤️ 환경 정보 제공**: 산책 전 현재 날씨 정보를 실시간으로 확인 (조회 기능)
+- **💾 경로 히스토리 관리**: 즐겨 찾는 산책로 및 최근 경로 저장 기능
 
-   ```bash
-   npx expo start
-   ```
+## 🛠 기술 스택
+### Frontend
+- **Framework**: React Native (Expo)
+- **Language**: TypeScript
+- **Navigation**: React Navigation
+- **State Management**: Zustand
+- **Map Service**: React Native Maps
+- **Communication**: Axios
 
-출력 결과에서 앱을 열 수 있는 옵션이 표시됩니다.
+### Design & Tools
+- **UI Framework**: React Native Paper (또는 사용하신 라이브러리)
+- **Build Tool**: Expo Go
 
-- [개발 빌드](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android 에뮬레이터](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS 시뮬레이터](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go): Expo에서 제공하는 제한된 샌드박스 환경
+## 🚀 시작하기
 
-**app** 디렉터리 안의 파일을 수정하면서 개발을 시작할 수 있습니다. 이 프로젝트는 [파일 기반 라우팅](https://docs.expo.dev/router/introduction)을 사용합니다.
+### 사전 준비 (Prerequisites)
+- [Node.js](https://nodejs.org/) 설치
+- [Expo Go](https://expo.dev/client) 앱 설치 (모바일 확인용)
 
-## 새 프로젝트 시작
-
-준비가 되면 다음 명령어를 실행하세요:
+### 설치 및 실행
+1. 의존성 라이브러리를 설치합니다.
 
 ```bash
-npm run reset-project
+npm install
+# 또는
+yarn install
+
 ```
 
-이 명령어는 스타터 코드를 **app-example** 디렉터리로 이동시키고, 새롭게 빈 **app** 디렉터리를 생성하여 개발을 시작할 수 있도록 합니다.
+2. 프로젝트를 실행합니다.
 
-## 더 알아보기
+```bash
+npx expo start
 
-Expo 프로젝트 개발에 대해 더 알아보려면 아래 자료를 참고하세요:
+```
 
-- [Expo 문서](https://docs.expo.dev/): 기본 개념부터 고급 주제까지 [가이드](https://docs.expo.dev/guides) 확인
-- [Learn Expo 튜토리얼](https://docs.expo.dev/tutorial/introduction/): Android, iOS, 웹에서 실행 가능한 프로젝트를 단계별로 따라 만들 수 있는 튜토리얼
+3. QR 코드를 스캔하여 Expo Go 앱에서 실행하거나, 시뮬레이터를 통해 확인합니다.
 
-## 커뮤니티 참여
+## 🏛️ 시스템 구조 (Architecture)
 
-전 세계 개발자들과 함께 유니버설 앱을 개발하는 커뮤니티에 참여하세요.
-
-- [Expo GitHub](https://github.com/expo/expo): 오픈 소스 플랫폼 확인 및 기여
-- [Discord 커뮤니티](https://chat.expo.dev): Expo 사용자와 질문/답변 교류
+* **Client**: React Native Expo 기반 모바일 인터페이스
+* **API**: 서울시 도보네트워크 API, 기상청 단기예보 API
+* **Server**: Spring Boot 백엔드 서버와 RESTful 통신
